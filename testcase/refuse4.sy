@@ -1,0 +1,14 @@
+int main() {
+    int val = 10;
+    int result;
+
+    result = val * ;
+
+    if (val $ 10) {
+        return 0;
+    }
+
+    result = 5 + return 0;
+
+    return 1;
+}

@@ -1,0 +1,16 @@
+int main() {
+    int x;
+    int Y_val;
+    int z;
+
+    x = 15;
+    Y_val = 4;
+
+    z = x + Y_val * 2 - 10 / 5 % 3;
+
+    if (z > 20) {
+        return z;
+    }
+
+    return 0;
+}

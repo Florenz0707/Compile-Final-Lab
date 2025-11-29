@@ -1,0 +1,14 @@
+void main {
+    int 9test = 10;
+
+    int result = 5 * 2
+
+    float PI = 3.14;
+    PI = 4.0;
+
+    if (result &&) {
+        return 0;
+    }
+
+    return 1;
+}

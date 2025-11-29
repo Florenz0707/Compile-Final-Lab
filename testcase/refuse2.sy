@@ -1,0 +1,9 @@
+void main() {
+    int 1alpha = 5;
+    int salary@ = 100;
+    float value = 5.;
+
+    if (1alpha == 5) {
+        return 0;
+    }
+}

@@ -1,0 +1,25 @@
+void main() {
+    int a;
+    int B;
+    const float PI = 3.14;
+
+    a = 10;
+    B = 5 * a;
+
+    int result_sum;
+    result_sum = a + B;
+
+    if (result_sum >= 60) {
+        return 1;
+    } else {
+        int remainder;
+        remainder = B % 10;
+
+        float value = a / 2.0;
+        if (value != PI) {
+            return 0;
+        }
+    }
+
+    return 0;
+}
