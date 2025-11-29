@@ -1,0 +1,24 @@
+const float PI = 3.14;
+
+void calculate_area(float radius) {
+    float area;
+    area = PI * radius * radius;
+
+    if (area >= 3.0 && area <= 3.2) {
+        return;
+    }
+}
+
+void main() {
+    float R = 1.0;
+
+    calculate_area(R);
+
+    float large_radius = 10.0;
+
+    if (large_radius != R) {
+        calculate_area(large_radius);
+    }
+
+    return;
+}

@@ -1,0 +1,17 @@
+int add_numbers(int a, int b) {
+    int sum;
+    sum = a + b;
+    return sum;
+}
+
+void main() {
+    int x = 5;
+    int y = 7;
+    int result;
+
+    result = add_numbers(x, y);
+
+    if (result == 12) {
+        return;
+    }
+}
