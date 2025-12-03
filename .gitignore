@@ -42,3 +42,5 @@
 
 .idea/
 .vscode/
+
+.DS_STORE
