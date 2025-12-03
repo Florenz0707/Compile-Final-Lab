@@ -30,6 +30,11 @@ public:
         mul,
         sdiv,
         mod,
+        // float binary operators
+        fadd,
+        fsub,
+        fmul,
+        fdiv,
         // Memory operators
         alloca,
         load,
@@ -40,7 +45,8 @@ public:
         call,
         getelementptr,
         zext, // zero extend
-        // float binary operators Logical operators
+        sitofp, // signed int to float
+        fptosi, // float to signed int
     };
 
     // create instruction, auto insert to bb
@@ -113,50 +119,48 @@ public:
         switch (op_id_) {
             case ret:
                 return "ret";
-                break;
             case br:
                 return "br";
-                break;
             case add:
                 return "add";
-                break;
             case sub:
                 return "sub";
-                break;
             case mul:
                 return "mul";
-                break;
             case sdiv:
                 return "sdiv";
-                break;
+            case mod:
+                return "srem";
+            case fadd:
+                return "fadd";
+            case fsub:
+                return "fsub";
+            case fmul:
+                return "fmul";
+            case fdiv:
+                return "fdiv";
             case alloca:
                 return "alloca";
-                break;
             case load:
                 return "load";
-                break;
             case store:
                 return "store";
-                break;
             case cmp:
                 return "cmp";
-                break;
             case phi:
                 return "phi";
-                break;
             case call:
                 return "call";
-                break;
             case getelementptr:
                 return "getelementptr";
-                break;
             case zext:
                 return "zext";
-                break;
-
+            case sitofp:
+                return "sitofp";
+            case fptosi:
+                return "fptosi";
             default:
                 return "";
-                break;
         }
     }
 
@@ -213,7 +217,7 @@ protected:
 };
 
 class BinaryInst : public Instruction {
-private:
+public:
     BinaryInst(Type *ty, OpID id, Value *v1, Value *v2, BasicBlock *bb);
 
     BinaryInst(Type *ty, OpID id, BasicBlock *bb) : Instruction(ty, id, 2, bb) {};
@@ -223,16 +227,28 @@ public:
     static BinaryInst *create_add(Value *v1, Value *v2, BasicBlock *bb,
                                   Module *m);
 
+    static BinaryInst *create_fadd(Value *v1, Value *v2, BasicBlock *bb,
+                                   Module *m);
+
     // create sub instruction, auto insert to bb
     static BinaryInst *create_sub(Value *v1, Value *v2, BasicBlock *bb,
                                   Module *m);
+
+    static BinaryInst *create_fsub(Value *v1, Value *v2, BasicBlock *bb,
+                                   Module *m);
 
     // create mul instruction, auto insert to bb
     static BinaryInst *create_mul(Value *v1, Value *v2, BasicBlock *bb,
                                   Module *m);
 
+    static BinaryInst *create_fmul(Value *v1, Value *v2, BasicBlock *bb,
+                                   Module *m);
+
     // create Div instruction, auto insert to bb
     static BinaryInst *create_sdiv(Value *v1, Value *v2, BasicBlock *bb,
+                                   Module *m);
+
+    static BinaryInst *create_fdiv(Value *v1, Value *v2, BasicBlock *bb,
                                    Module *m);
 
     static BinaryInst *create_mod(Value *v1, Value *v2, BasicBlock *bb,
@@ -290,6 +306,8 @@ private:
 public:
     static CmpInst *create_cmp(CmpOp op, Value *lhs, Value *rhs, BasicBlock *bb,
                                Module *m);
+    static CmpInst *create_fcmp(CmpOp op, Value *lhs, Value *rhs, BasicBlock *bb,
+                                Module *m);
 
     CmpOp get_cmp_op() { return cmp_op_; }
 
@@ -624,6 +642,63 @@ public:
 private:
     Type *dest_ty_;
 };
+
+class SiToFpInst : public Instruction {
+private:
+    SiToFpInst(OpID op, Value *val, Type *ty, BasicBlock *bb);
+    SiToFpInst(Type *ty, BasicBlock *bb)
+        : Instruction(ty, Instruction::sitofp, 1, bb), dest_ty_(ty) {};
+public:
+    static SiToFpInst *create_sitofp(Value *val, Type *ty, BasicBlock *bb);
+    Type *get_dest_type() const;
+    virtual std::string print() override;
+    virtual SiToFpInst *deepcopy(BasicBlock *parent) override {
+        // 复制基本信息
+        SiToFpInst *newInst = new SiToFpInst(type_, parent);
+        // 复制UseList
+        newInst->use_list_.clear();
+        for (auto u: use_list_) {
+            newInst->use_list_.push_back(u);
+        }
+        // 复制Operands
+        newInst->operands_.clear();
+        for (auto o: operands_) {
+            newInst->operands_.push_back(o);
+        }
+        return newInst;
+    };
+private:
+    Type *dest_ty_;
+};
+
+class FpToSiInst : public Instruction {
+private:
+    FpToSiInst(OpID op, Value *val, Type *ty, BasicBlock *bb);
+    FpToSiInst(Type *ty, BasicBlock *bb)
+        : Instruction(ty, Instruction::fptosi, 1, bb), dest_ty_(ty) {};
+public:
+    static FpToSiInst *create_fptosi(Value *val, Type *ty, BasicBlock *bb);
+    Type *get_dest_type() const;
+    virtual std::string print() override;
+     virtual FpToSiInst *deepcopy(BasicBlock *parent) override {
+        // 复制基本信息
+        FpToSiInst *newInst = new FpToSiInst(type_, parent);
+        // 复制UseList
+        newInst->use_list_.clear();
+        for (auto u: use_list_) {
+            newInst->use_list_.push_back(u);
+        }
+        // 复制Operands
+        newInst->operands_.clear();
+        for (auto o: operands_) {
+            newInst->operands_.push_back(o);
+        }
+        return newInst;
+    };
+private:
+    Type *dest_ty_;
+};
+
 
 class PhiInst : public Instruction {
 private:

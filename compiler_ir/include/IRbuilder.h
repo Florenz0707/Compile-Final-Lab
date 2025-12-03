@@ -111,6 +111,22 @@ public:
         return BinaryInst::create_mod(lhs, rhs, this->BB_, m_);
     }
 
+    BinaryInst *create_fadd(Value *lhs, Value *rhs) {
+        return BinaryInst::create_fadd(lhs, rhs, this->BB_, m_);
+    }
+
+    BinaryInst *create_fsub(Value *lhs, Value *rhs) {
+        return BinaryInst::create_fsub(lhs, rhs, this->BB_, m_);
+    }
+
+    BinaryInst *create_fmul(Value *lhs, Value *rhs) {
+        return BinaryInst::create_fmul(lhs, rhs, this->BB_, m_);
+    }
+
+    BinaryInst *create_fdiv(Value *lhs, Value *rhs) {
+        return BinaryInst::create_fdiv(lhs, rhs, this->BB_, m_);
+    }
+
     /*!
      *@brief 创建与运算指令
      *@param lhs 左值指针
@@ -199,6 +215,30 @@ public:
      */
     CmpInst *create_icmp_le(Value *lhs, Value *rhs) {
         return CmpInst::create_cmp(CmpInst::LE, lhs, rhs, this->BB_, m_);
+    }
+
+    CmpInst *create_fcmp_eq(Value *lhs, Value *rhs) {
+        return CmpInst::create_fcmp(CmpInst::EQ, lhs, rhs, this->BB_, m_);
+    }
+
+    CmpInst *create_fcmp_ne(Value *lhs, Value *rhs) {
+        return CmpInst::create_fcmp(CmpInst::NE, lhs, rhs, this->BB_, m_);
+    }
+
+    CmpInst *create_fcmp_gt(Value *lhs, Value *rhs) {
+        return CmpInst::create_fcmp(CmpInst::GT, lhs, rhs, this->BB_, m_);
+    }
+
+    CmpInst *create_fcmp_ge(Value *lhs, Value *rhs) {
+        return CmpInst::create_fcmp(CmpInst::GE, lhs, rhs, this->BB_, m_);
+    }
+
+    CmpInst *create_fcmp_lt(Value *lhs, Value *rhs) {
+        return CmpInst::create_fcmp(CmpInst::LT, lhs, rhs, this->BB_, m_);
+    }
+
+    CmpInst *create_fcmp_le(Value *lhs, Value *rhs) {
+        return CmpInst::create_fcmp(CmpInst::LE, lhs, rhs, this->BB_, m_);
     }
 
     /*!
@@ -319,6 +359,14 @@ public:
      */
     ZextInst *create_zext(Value *val, Type *ty) {
         return ZextInst::create_zext(val, ty, this->BB_);
+    }
+
+    SiToFpInst *create_sitofp(Value *val, Type *ty) {
+        return SiToFpInst::create_sitofp(val, ty, this->BB_);
+    }
+
+    FpToSiInst *create_fptosi(Value *val, Type *ty) {
+        return FpToSiInst::create_fptosi(val, ty, this->BB_);
     }
 };
 
