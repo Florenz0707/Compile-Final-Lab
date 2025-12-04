@@ -74,6 +74,22 @@ BinaryInst *BinaryInst::create_mod(Value *v1, Value *v2, BasicBlock *bb, Module 
     return new BinaryInst(Type::get_int32_type(m), Instruction::mod, v1, v2, bb);
 }
 
+BinaryInst *BinaryInst::create_fadd(Value *v1, Value *v2, BasicBlock *bb, Module *m) {
+    return new BinaryInst(Type::get_float_type(m), Instruction::fadd, v1, v2, bb);
+}
+
+BinaryInst *BinaryInst::create_fsub(Value *v1, Value *v2, BasicBlock *bb, Module *m) {
+    return new BinaryInst(Type::get_float_type(m), Instruction::fsub, v1, v2, bb);
+}
+
+BinaryInst *BinaryInst::create_fmul(Value *v1, Value *v2, BasicBlock *bb, Module *m) {
+    return new BinaryInst(Type::get_float_type(m), Instruction::fmul, v1, v2, bb);
+}
+
+BinaryInst *BinaryInst::create_fdiv(Value *v1, Value *v2, BasicBlock *bb, Module *m) {
+    return new BinaryInst(Type::get_float_type(m), Instruction::fdiv, v1, v2, bb);
+}
+
 bool BinaryInst::isStaticCalculable() {
     auto cl = dynamic_cast<ConstantInt *>(get_operand(0));
     auto cr = dynamic_cast<ConstantInt *>(get_operand(1));
@@ -85,7 +101,7 @@ std::string BinaryInst::print() {
     instr_ir += "%";
     instr_ir += this->get_name();
     instr_ir += " = ";
-    instr_ir += this->get_module()->get_instr_op_name(this->get_instr_type());
+    instr_ir += this->get_instr_op_name();
     instr_ir += " ";
     instr_ir += this->get_operand(0)->get_type()->print();
     instr_ir += " ";
@@ -117,7 +133,7 @@ int BinaryInst::calculate() {
             if (cr == 0) return 0;
             return cl % cr;
         default:
-            assert(0 && "Invalid instr type");
+            return 0;
     }
 }
 
@@ -166,12 +182,17 @@ CmpInst *CmpInst::create_cmp(CmpOp op, Value *lhs, Value *rhs,
     return new CmpInst(m->get_int1_type(), op, lhs, rhs, bb);
 }
 
+CmpInst *CmpInst::create_fcmp(CmpOp op, Value *lhs, Value *rhs,
+                              BasicBlock *bb, Module *m) {
+    return new CmpInst(m->get_int1_type(), op, lhs, rhs, bb);
+}
+
 std::string CmpInst::print() {
     std::string instr_ir;
     instr_ir += "%";
     instr_ir += this->get_name();
     instr_ir += " = ";
-    instr_ir += this->get_module()->get_instr_op_name(this->get_instr_type());
+    instr_ir += this->get_operand(0)->get_type()->is_float_type() ? "fcmp" : "icmp";
     instr_ir += " ";
     instr_ir += print_cmp_type(this->cmp_op_);
     instr_ir += " ";
@@ -508,6 +529,58 @@ std::string ZextInst::print() {
     return instr_ir;
 }
 
+SiToFpInst::SiToFpInst(OpID op, Value *val, Type *ty, BasicBlock *bb)
+    : Instruction(ty, op, 1, bb), dest_ty_(ty) {
+    set_operand(0, val);
+}
+
+SiToFpInst *SiToFpInst::create_sitofp(Value *val, Type *ty, BasicBlock *bb) {
+    return new SiToFpInst(Instruction::sitofp, val, ty, bb);
+}
+
+Type *SiToFpInst::get_dest_type() const { return dest_ty_; }
+
+std::string SiToFpInst::print() {
+    std::string instr_ir;
+    instr_ir += "%";
+    instr_ir += this->get_name();
+    instr_ir += " = ";
+    instr_ir += "sitofp";
+    instr_ir += " ";
+    instr_ir += this->get_operand(0)->get_type()->print();
+    instr_ir += " ";
+    instr_ir += print_as_op(this->get_operand(0), false);
+    instr_ir += " to ";
+    instr_ir += this->get_dest_type()->print();
+    return instr_ir;
+}
+
+FpToSiInst::FpToSiInst(OpID op, Value *val, Type *ty, BasicBlock *bb)
+    : Instruction(ty, op, 1, bb), dest_ty_(ty) {
+    set_operand(0, val);
+}
+
+FpToSiInst *FpToSiInst::create_fptosi(Value *val, Type *ty, BasicBlock *bb) {
+    return new FpToSiInst(Instruction::fptosi, val, ty, bb);
+}
+
+Type *FpToSiInst::get_dest_type() const { return dest_ty_; }
+
+std::string FpToSiInst::print() {
+    std::string instr_ir;
+    instr_ir += "%";
+    instr_ir += this->get_name();
+    instr_ir += " = ";
+    instr_ir += "fptosi";
+    instr_ir += " ";
+    instr_ir += this->get_operand(0)->get_type()->print();
+    instr_ir += " ";
+    instr_ir += print_as_op(this->get_operand(0), false);
+    instr_ir += " to ";
+    instr_ir += this->get_dest_type()->print();
+    return instr_ir;
+}
+
 PhiInst::PhiInst(OpID op, std::vector<Value *> vals, std::vector<BasicBlock *> val_bbs, Type *ty, BasicBlock *bb)
         : Instruction(ty, op, 2 * (int) vals.size()) {
     for (int i = 0; i < (int) vals.size(); i++) {
@@ -515,6 +588,10 @@ PhiInst::PhiInst(OpID op, std::vector<Value *> vals, std::vector<BasicBlock *> v
         set_operand(2 * i + 1, val_bbs[i]);
     }
     this->set_parent(bb);
+    // Bug Fix 1: 手动将phi指令添加到基本块中
+    if (bb) {
+        bb->add_instruction(this);
+    }
 }
 
 PhiInst *PhiInst::create_phi(Type *ty, BasicBlock *bb) {

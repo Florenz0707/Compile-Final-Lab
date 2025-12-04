@@ -91,6 +91,22 @@ public:
     std::string print() override;
 };
 
+class ConstantFP : public Constant {
+private:
+    float value_;
+
+public:
+    ConstantFP(Type *ty, float val) : Constant(ty, "", 0), value_(val) {}
+
+    static float get_value(ConstantFP *const_val) { return const_val->value_; }
+
+    float get_value() const { return value_; }
+
+    static ConstantFP *get(float val, Module *m);
+
+    std::string print() override;
+};
+
 /*!
  *@brief 常量数组
  *constant int array
