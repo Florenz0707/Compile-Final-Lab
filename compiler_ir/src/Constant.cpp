@@ -55,6 +55,14 @@ std::string ConstantInt::print() {
     return const_ir;
 }
 
+ConstantFP *ConstantFP::get(float val, Module *m) {
+    return new ConstantFP(Type::get_float_type(m), val);
+}
+
+std::string ConstantFP::print() {
+    return std::to_string(value_);
+}
+
 /*!
  *@brief 常量整数类构造函数
  *@param ty 常量类型
