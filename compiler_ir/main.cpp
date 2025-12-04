@@ -11,8 +11,8 @@
 #include <string>
 #include <vector>
 #include <dirent.h>
-#include "Lexer.h"
-#include "Parser.h"
+#include "SLRLexer.h"
+#include "SLRParser.h"
 #include "AST.h"
 #include "IRGenerator.h"
 
@@ -39,18 +39,27 @@ int analyzeFileVerbose(const std::string& filename) {
     std::cout << "分析文件: " << filename << std::endl;
     std::cout << "========================================" << std::endl;
 
-    // 词法分析
-    Lexer lexer;
-    if (!lexer.loadFromFile(filename)) {
+    // 读取源文件
+    std::ifstream file(filename);
+    if (!file.is_open()) {
         std::cout << "错误: 无法打开文件" << std::endl;
         return 1;
     }
-    lexer.tokenize();
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    std::string sourceCode = buffer.str();
+    file.close();
+
+    // 词法分析
+    SLRLexer lexer;
+    auto tokens = lexer.analyze(sourceCode);
 
     std::cout << "\n========== 词法分析结果 ==========" << std::endl;
-    lexer.printTokens();
-
-    const auto& tokens = lexer.getTokens();
+    for (const auto& token : tokens) {
+        if (token.type != TokenType::END_OF_FILE) {
+            std::cout << token.toString() << std::endl;
+        }
+    }
 
     // 检查词法错误
     bool hasLexError = false;
@@ -66,7 +75,7 @@ int analyzeFileVerbose(const std::string& filename) {
 
     // 语法分析
     std::cout << "\n========== 语法分析结果 ==========" << std::endl;
-    Parser parser;
+    SLRParser parser;
     bool parseSuccess = parser.parse(tokens);
 
     std::cout << "\n最终结果: " << (parseSuccess ? "accept" : "error") << std::endl;
@@ -100,34 +109,38 @@ void runAllTestcases(const std::string& testDir) {
 
         std::cout << "Processing [" << testCase << "]..." << std::flush;
 
-        // 1. 词法分析 & 输出到 .tok 文件
-        Lexer lexer;
-        if (!lexer.loadFromFile(filepath)) {
+        // 1. 读取源文件
+        std::ifstream file(filepath);
+        if (!file.is_open()) {
             std::cout << " FILE NOT FOUND" << std::endl;
             continue;
         }
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        std::string sourceCode = buffer.str();
+        file.close();
 
-        // 将 lexer.printTokens() 的输出重定向到文件
+        // 2. 词法分析 & 输出到 .tok 文件
+        SLRLexer lexer;
+        auto tokens = lexer.analyze(sourceCode);
+        
         {
             std::ofstream tokFile(stem + ".tok");
-            std::streambuf* coutBuf = std::cout.rdbuf(); // 保存旧的 cout buffer
-            std::cout.rdbuf(tokFile.rdbuf());            // 重定向 cout 到文件
-
-            lexer.tokenize();
-            std::cout << "File: " << testCase << std::endl;
-            lexer.printTokens(); // 输出会写入文件
-
-            std::cout.rdbuf(coutBuf);                    // 恢复 cout
+            tokFile << "File: " << testCase << std::endl;
+            for (const auto& token : tokens) {
+                if (token.type != TokenType::END_OF_FILE) {
+                    tokFile << token.toString() << std::endl;
+                }
+            }
         }
 
-        const auto& tokens = lexer.getTokens();
         bool hasLexError = false;
         for (const auto& token : tokens) {
             if (token.type == TokenType::ERROR) hasLexError = true;
         }
 
-        // 2. 语法分析
-        Parser parser;
+        // 3. 语法分析
+        SLRParser parser;
         bool parseSuccess = parser.parse(tokens);
 
         // 3. 中间代码生成 & 输出到 .ll 文件 (仅当语法正确时)
@@ -171,19 +184,28 @@ int showDetailedLexer(const std::string& filename) {
     std::cout << "词法分析: " << filename << std::endl;
     std::cout << "========================================" << std::endl;
 
-    Lexer lexer;
-    if (!lexer.loadFromFile(filename)) {
+    std::ifstream file(filename);
+    if (!file.is_open()) {
         std::cout << "错误: 无法打开文件" << std::endl;
         return 1;
     }
-    lexer.tokenize();
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    std::string sourceCode = buffer.str();
+    file.close();
+
+    SLRLexer lexer;
+    auto tokens = lexer.analyze(sourceCode);
 
     std::cout << "\n单词符号序列:" << std::endl;
     std::cout << "----------------------------------------" << std::endl;
-    lexer.printTokens();
+    for (const auto& token : tokens) {
+        if (token.type != TokenType::END_OF_FILE) {
+            std::cout << token.toString() << std::endl;
+        }
+    }
     std::cout << "----------------------------------------" << std::endl;
 
-    const auto& tokens = lexer.getTokens();
     int errorCount = 0;
     for (const auto& token : tokens) {
         if (token.type == TokenType::ERROR) {
@@ -371,17 +393,23 @@ int main(int argc, char* argv[]) {
         std::cout << "分析文件并生成IR: " << filename << std::endl;
         std::cout << "========================================" << std::endl;
 
-        // 1. 词法分析
-        Lexer lexer;
-        if (!lexer.loadFromFile(filename)) {
+        // 1. 读取源文件
+        std::ifstream file(filename);
+        if (!file.is_open()) {
             std::cerr << "错误: 无法打开文件" << std::endl;
             return 1;
         }
-        lexer.tokenize();
-        const auto& tokens = lexer.getTokens();
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        std::string sourceCode = buffer.str();
+        file.close();
 
-        // 2. 语法分析
-        Parser parser;
+        // 2. 词法分析
+        SLRLexer lexer;
+        auto tokens = lexer.analyze(sourceCode);
+
+        // 3. 语法分析
+        SLRParser parser;
         bool parseSuccess = parser.parse(tokens);
 
         if (!parseSuccess) {
@@ -389,7 +417,7 @@ int main(int argc, char* argv[]) {
             return 1;
         }
 
-        // 3. 中间代码生成
+        // 4. 中间代码生成
         std::cout << "\n========== 中间代码生成 ==========" << std::endl;
         auto ast = parser.getAST();
 
