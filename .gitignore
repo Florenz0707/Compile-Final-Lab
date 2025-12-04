@@ -43,3 +43,6 @@
 .idea/
 .vscode/
 .DS_Store
+
+testcase/*.ll
+testcase/*.tok
