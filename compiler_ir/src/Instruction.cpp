@@ -588,6 +588,10 @@ PhiInst::PhiInst(OpID op, std::vector<Value *> vals, std::vector<BasicBlock *> v
         set_operand(2 * i + 1, val_bbs[i]);
     }
     this->set_parent(bb);
+    // Bug Fix 1: 手动将phi指令添加到基本块中
+    if (bb) {
+        bb->add_instruction(this);
+    }
 }
 
 PhiInst *PhiInst::create_phi(Type *ty, BasicBlock *bb) {

@@ -171,7 +171,37 @@ float IRGenerator::evalConstFloat(std::shared_ptr<ExpNode> node) {
     if (auto numNode = std::dynamic_pointer_cast<NumberNode>(node)) {
         return numNode->isFloat ? numNode->floatVal : (float)numNode->intVal;
     }
-    // 其他情况返回0
+    if (auto addNode = std::dynamic_pointer_cast<AddExpNode>(node)) {
+        if (!addNode->left && addNode->right) {
+            // 仅有右操作数（mulExp）
+            return evalConstFloat(addNode->right);
+        }
+    }
+    if (auto mulNode = std::dynamic_pointer_cast<MulExpNode>(node)) {
+        if (!mulNode->left && mulNode->right) {
+            // 仅有右操作数（unaryExp）
+            return evalConstFloat(mulNode->right);
+        }
+    }
+    if (auto unaryNode = std::dynamic_pointer_cast<UnaryExpNode>(node)) {
+        if (unaryNode->unaryType == UnaryExpNode::UnaryType::PRIMARY) {
+            return evalConstFloat(unaryNode->primaryExp);
+        } else if (unaryNode->unaryType == UnaryExpNode::UnaryType::UNARY_OP) {
+            float val = evalConstFloat(unaryNode->unaryExp);
+            switch (unaryNode->unaryOp) {
+                case UnaryOp::PLUS: return val;
+                case UnaryOp::MINUS: return -val;
+                case UnaryOp::NOT: return val == 0.0f ? 1.0f : 0.0f;
+            }
+        }
+    }
+    if (auto primaryNode = std::dynamic_pointer_cast<PrimaryExpNode>(node)) {
+        if (primaryNode->primaryType == PrimaryExpNode::PrimaryType::NUMBER) {
+            return primaryNode->number->isFloat ? primaryNode->number->floatVal : (float)primaryNode->number->intVal;
+        } else if (primaryNode->primaryType == PrimaryExpNode::PrimaryType::PAREN_EXP) {
+            return evalConstFloat(primaryNode->exp);
+        }
+    }
     return 0.0f;
 }
 
@@ -461,11 +491,31 @@ void IRGenerator::visitIfStmt(std::shared_ptr<StmtNode> node) {
 }
 
 void IRGenerator::visitReturnStmt(std::shared_ptr<StmtNode> node) {
-    if (node->exp) {
-        Value* retVal = visitExp(node->exp);
-        builder->create_ret(retVal);
+    // Bug Fix 3: 检查返回类型是否与函数签名匹配
+    if (currentFunction) {
+        Type* funcRetType = currentFunction->get_return_type();
+        
+        if (funcRetType->is_void_type()) {
+            // 函数返回类型是void，强制生成void返回
+            builder->create_void_ret();
+        } else {
+            // 非void函数，必须有返回值
+            if (node->exp) {
+                Value* retVal = visitExp(node->exp);
+                builder->create_ret(retVal);
+            } else {
+                // 如果没有返回值表达式，返回默认值0
+                builder->create_ret(ConstantInt::get(0, module));
+            }
+        }
     } else {
-        builder->create_void_ret();
+        // 兜底逻辑（不应该发生）
+        if (node->exp) {
+            Value* retVal = visitExp(node->exp);
+            builder->create_ret(retVal);
+        } else {
+            builder->create_void_ret();
+        }
     }
 }
 
