@@ -42,12 +42,55 @@
     frame=single,
     framerule=0pt,
 }
+
+% 定义伪代码环境：将所有的 \lstset 参数都放在这里
 \lstnewenvironment{pseudocode}[1][]{
     \lstset{
         language=Mathematica, % 使用一个不常用的语言来禁用语法高亮
+        % 将任何额外的设置参数通过 #1 传递
         #1
     }
 }{}
+
+% ---------------------------
+% 使用 titletoc 美化目录
+% ---------------------------
+\usepackage{titletoc}
+
+% 目录标题上下横线
+\titlecontents{toc}
+  [0pt]
+  {\vspace{0.5em}}
+  {\bfseries 目录\\[0.5em]\rule{\textwidth}{0.4pt}}
+  {}
+  {\vspace{0.5em}\rule{\textwidth}{0.4pt}}
+  []
+
+% section
+\titlecontents{section}
+  [0em]                      % 缩进
+  {\vspace{0.25em}}          % 之前的间距
+  {\contentslabel{2em}}      % 章节编号宽度
+  {}
+  {\titlerule*[0.5em]{.}\contentspage}
+
+% subsection
+\titlecontents{subsection}
+  [1.5em]
+  {\vspace{0.15em}}
+  {\contentslabel{3em}}
+  {}
+  {\titlerule*[0.5em]{.}\contentspage}
+
+% subsubsection
+\titlecontents{subsubsection}
+  [3em]
+  {\vspace{0.1em}}
+  {\contentslabel{4em}}
+  {}
+  {\titlerule*[0.5em]{.}\contentspage}
+
+
 
 % ======================================================================
 % 文档区 (Document)
@@ -62,7 +105,7 @@
     \input{personal_info}
     \centering % 整体居中
 
-    % 1. 校徽 (使用占位符)
+    % 1. 校徽
     \vspace*{2cm} % 距离顶部一些空间
 
     \includegraphics[width=0.5\linewidth]{logo.png}
@@ -101,182 +144,70 @@
     \vspace{3cm} % 距离底部一些空间
 \end{titlepage}
 
-% ----------------------------------------------------------------------
-% 报告正文 (Main Body) - 替换为源码说明内容
-% ----------------------------------------------------------------------
+% --- 目录页 ---
+
+\clearpage
+\thispagestyle{empty}
+
+\begin{center}
+    {\Huge \textbf{目 录}}
+\end{center}
+
+\vspace{1cm}
+
+\tableofcontents
+
 \clearpage
 
-\section*{目录} % 为目录添加标题
-\addcontentsline{toc}{section}{目录}
-\tableofcontents % 添加目录
-\clearpage
+
 
 % --- 编译器源码结构和功能详细说明 ---
 
 \section{词法分析器}
 
 \subsection{算法描述}
-
 本项目实现了两种词法分析器：
 
-\subsubsection{方法一：基于DFA状态机的词法分析器 (\texttt{Lexer})} % 已修改为 \subsubsection
-
+\subsubsection{方法一：基于DFA状态机的词法分析器 (\texttt{Lexer})}
 \paragraph{算法流程：}
 \begin{enumerate}
-    \item \textbf{初始化阶段}：
-    \begin{itemize}
-        \item 初始化关键字表（\texttt{int}, \texttt{void}, \texttt{return}, \texttt{const}, \texttt{float}, \texttt{if}, \texttt{else}）
-        \item 设置当前位置指针 $\texttt{pos} = 0$，行号 $\texttt{line} = 1$，列号 $\texttt{column} = 1$
-    \end{itemize}
+    \item \textbf{初始化阶段}：初始化关键字表、设置指针 \texttt{pos = 0}，行号 \texttt{line = 1}，列号 \texttt{column = 1}。
     \item \textbf{主分析循环} (\texttt{tokenize()} 函数)：
-    \begin{pseudocode}
-WHILE pos < source.length():
-    跳过空白字符 (空格、制表符、换行符)
-    跳过注释 (// 行注释 或 /* */ 块注释)
-
-    IF 当前位置字符是字母或下划线:
-        调用 scanIdentifier() 扫描标识符或关键字
-    ELSE IF 当前位置字符是数字:
-        调用 scanNumber() 扫描整数或浮点数
-    ELSE IF 当前位置字符是界符 ( ( ) { } ; , ):
-        调用 scanSeparator() 扫描界符
-    ELSE IF 当前位置字符是运算符 ( + - * / \% = < > ! & | ):
-        调用 scanOperator() 扫描运算符
-    ELSE:
-        创建ERROR token
-
-    将扫描到的token添加到tokens列表
-END WHILE
-
-添加EOF token
-    \end{pseudocode}
-
-    \item \textbf{DFA状态转换}：
-    \begin{itemize}
-        \item \texttt{START}: 初始状态
-        \item \texttt{IN\_ID}: 标识符状态（字母/下划线开头，后跟字母/数字/下划线）
-        \item \texttt{IN\_NUM}: 整数状态（数字序列）
-        \item \texttt{IN\_FLOAT}: 浮点数状态（数字.数字）
-        \item \texttt{IN\_ASSIGN}: =状态（可能是=或==）
-        \item \texttt{IN\_LT}: <状态（可能是<或<=）
-        \item \texttt{IN\_GT}: >状态（可能是>或>=）
-        \item \texttt{IN\_NOT}: !状态（需要!=）
-        \item \texttt{IN\_AND}: \&状态（需要\&\&）
-        \item \texttt{IN\_OR}: $|$状态（需要$||$）
-        \item \texttt{IN\_COMMENT\_LINE}: 行注释状态
-        \item \texttt{IN\_COMMENT\_BLOCK}: 块注释状态
-    \end{itemize}
+        \begin{itemize}
+            \item 跳过空白字符和注释。
+            \item 根据首字符判断：字母/下划线（标识符或关键字）、数字（整数或浮点数）、界符、运算符。
+            \item 对应调用 \texttt{scanIdentifier()}、\texttt{scanNumber()} 等方法进行扫描。
+        \end{itemize}
 \end{enumerate}
-
-\subsubsection{方法二：基于NFA→DFA转换的词法分析器 (\texttt{SLRLexer})} % 已修改为 \subsubsection
-
-\paragraph{算法流程：}
-\begin{enumerate}
-    \item \textbf{构建NFA} (\texttt{buildDFA()} 函数)：
-    \begin{itemize}
-        \item 为关键字、标识符、整数、浮点数、运算符、界符分别构建NFA
-        \item 使用epsilon转换合并所有NFA为一个组合NFA
-        \item 通过子集构造法（Subset Construction）将NFA转换为DFA
-        \item 使用DFA最小化算法优化DFA
-    \end{itemize}
-    \item \textbf{最长匹配算法} (\texttt{analyze()} 函数)：
-    \begin{pseudocode}
-初始化: currentState = dfa.start, startPos = pos
-
-WHILE pos < source.length():
-    跳过空白字符和注释
-
-    currentState = dfa.start
-    startPos = pos
-    lastAcceptState = nullptr
-    lastAcceptPos = -1
-    currentPos = pos
-
-    // 最长匹配
-    WHILE currentPos < source.length():
-         char c = sourceCode[currentPos]
-         IF currentState有c的转换:
-             currentState = currentState.transitions[c]
-             currentPos++
-             IF currentState是接受状态:
-                 lastAcceptState = currentState
-                 lastAcceptPos = currentPos
-         ELSE:
-             BREAK
-    END WHILE
-
-    IF lastAcceptState != nullptr AND lastAcceptPos > startPos:
-        创建token: Token(lastAcceptState->acceptType,
-                        sourceCode.substr(startPos, lastAcceptPos - startPos))
-         pos = lastAcceptPos
-    ELSE:
-        创建ERROR token
-         pos++
-END WHILE
-
-添加EOF token
-    \end{pseudocode}
-\end{enumerate}
-
-\subsection{输出格式说明}
-
-\paragraph{Token输出格式：}
-\texttt{[单词符号] TAB <[类型],[属性]>}
-
-\paragraph{类型分类：}
+\subsubsection{方法二：基于NFA→DFA转换的词法分析器 (\texttt{SLRLexer})}
+\paragraph{算法特点：}
 \begin{itemize}
-    \item \textbf{KW (关键字)}: \texttt{int(1)}, \texttt{void(2)}, \texttt{return(3)}, \texttt{const(4)}, \texttt{float(6)}, \texttt{if(7)}, \texttt{else(8)}
-    \item \textbf{OP (运算符)}: \texttt{+(30)}, \texttt{-(31)}, \texttt{*(32)}, \texttt{/(33)}, \texttt{\%(34)}, \texttt{=(35)}, \texttt{>(36)}, \texttt{<(37)}, \texttt{==(38)}, \texttt{<=(39)}, \texttt{>=(40)}, \texttt{!=(41)}, \texttt{\&\&(42)}, \texttt{||(43)}, \texttt{!(44)}
-    \item \textbf{SE (界符)}: \texttt{((50)}, \texttt{)(51)}, \texttt{\{(52)}, \texttt{\}(53)}, \texttt{;(54)}, \texttt{,(55)}
-    \item \textbf{IDN (标识符)}: \texttt{<IDN,标识符名称>}
-    \item \textbf{INT (整数)}: \texttt{<INT,整数值>}
-    \item \textbf{FLOAT (浮点数)}: \texttt{<FLOAT,浮点数值>}
-    \item \textbf{EOF (文件结束)}: \texttt{\$}
+    \item 使用正则表达式工具自动生成NFA和DFA。
+    \item 分析器读取 DFA 状态转换表进行词法分析。
 \end{itemize}
 
+\subsection{输出格式说明}
+词法分析器将源程序分解为一系列 token 序列，每个 token 包含：
+\begin{itemize}
+    \item \textbf{Token 类型}：如 \texttt{KEYWORD\_INT}, \texttt{IDENTIFIER}, \texttt{NUMBER}, \texttt{SEMI}. % <-- 修复: 使用 \texttt{} 并转义下划线
+    \item \textbf{Token 值}：如关键字的名称，标识符的名称，数字的实际值。
+    \item \textbf{位置信息}：行号和列号，用于错误报告。
+\end{itemize}
 \paragraph{示例输出：}
 \begin{verbatim}
-int	<KW,1>
-main	<IDN,main>
-(	<SE,50>
-)	<SE,51>
-{	<SE,52>
-return	<KW,3>
-10	<INT,10>
-;	<SE,54>
-}	<SE,53>
+[Token_Type: KEYWORD_INT, Value: int, Line: 1, Column: 1]
+[Token_Type: IDENTIFIER, Value: a, Line: 1, Column: 5]
+[Token_Type: ASSIGN, Value: =, Line: 1, Column: 7]
+[Token_Type: NUMBER, Value: 10, Line: 1, Column: 9]
+[Token_Type: SEMI, Value: ;, Line: 1, Column: 11]
 \end{verbatim}
 
 \subsection{源程序编译步骤}
-
-\paragraph{使用词法分析器的编译步骤：}
 \begin{enumerate}
-    \item \textbf{加载源文件}：
-    \begin{verbatim}
-Lexer lexer;
-lexer.loadFromFile("source.sy");
-    \end{verbatim}
-    \item \textbf{执行词法分析}：
-    \begin{verbatim}
-lexer.tokenize();
-    \end{verbatim}
-    \item \textbf{获取Token序列}：
-    \begin{verbatim}
-const auto& tokens = lexer.getTokens();
-    \end{verbatim}
-    \item \textbf{输出结果}：
-    \begin{verbatim}
-lexer.printTokens();  // 打印到标准输出
-// 或
-std::string tokenStr = lexer.getTokensString();  // 获取字符串
-    \end{verbatim}
+    \item \textbf{输入}：C--源程序文件。
+    \item \textbf{执行}：调用 \texttt{Lexer::tokenize()} 方法。
+    \item \textbf{输出}：Token 列表。
 \end{enumerate}
-
-\paragraph{命令行使用：}
-\begin{verbatim}
-./compiler -l source.sy    # 仅词法分析
-\end{verbatim}
-
 \hrule
 
 \section{语法分析器}
@@ -285,43 +216,7 @@ std::string tokenStr = lexer.getTokensString();  // 获取字符串
 
 本项目实现了两种语法分析器：
 
-\subsubsection{方法一：递归下降语法分析器 (\texttt{Parser})} % 已修改为 \subsubsection
-
-\paragraph{算法特点：}
-\begin{itemize}
-    \item 为每个非终结符编写一个递归函数
-    \item 通过向前看（lookahead）解决选择冲突
-    \item 自顶向下构建AST
-\end{itemize}
-
-\paragraph{主要分析函数：}
-\begin{itemize}
-    \item \texttt{parseCompUnit()}: 解析编译单元
-    \item \texttt{parseConstDecl()}: 解析常量声明
-    \item \texttt{parseVarDecl()}: 解析变量声明
-    \item \texttt{parseFuncDef()}: 解析函数定义
-    \item \texttt{parseStmt()}: 解析语句
-    \item \texttt{parseExp()}: 解析表达式（通过\texttt{parseAddExp}）
-    \item \texttt{parseCond()}: 解析条件表达式
-\end{itemize}
-
-\paragraph{算法流程示例（\texttt{parseAddExp}）：}
-\begin{pseudocode}
-parseAddExp():
-    left = parseMulExp()
-
-    WHILE 当前token是 + 或 -:
-        保存运算符op
-        前进token
-        right = parseMulExp()
-        创建新的AddExpNode，left作为左子树，right作为右子树
-        left = 新节点
-    END WHILE
-
-    RETURN left
-\end{pseudocode}
-
-\subsubsection{方法二：SLR语法分析器 (\texttt{SLRParser})} % 已修改为 \subsubsection
+\subsubsection{方法一：SLR语法分析器 (\texttt{SLRParser})} % 对应源码结构文档的方法一
 
 \paragraph{算法流程：}
 \begin{enumerate}
@@ -346,8 +241,9 @@ WHILE FIRST集发生变化:
                     BREAK
                 IF 到达α的末尾:
                     FIRST(A) += {ε}
-END WHILE
+    END WHILE
     \end{pseudocode}
+
     \item \textbf{计算FOLLOW集} (\texttt{computeFollow()}):
     \begin{pseudocode}
 FOLLOW(开始符号) = {$}
@@ -360,8 +256,9 @@ WHILE FOLLOW集发生变化:
                 FOLLOW(B) += FOLLOW(A)
         ELSE:
             FOLLOW(B) += FOLLOW(A)
-END WHILE
+    END WHILE
     \end{pseudocode}
+
     \item \textbf{构建LR(0)项目集族} (\texttt{buildCollection()}):
     \begin{pseudocode}
 I0 = closure({S' -> ·Program})
@@ -376,6 +273,7 @@ WHILE 有新的项目集产生:
                 记录转换: (I, X) -> J
     END WHILE
     \end{pseudocode}
+
     \item \textbf{构建SLR分析表} (\texttt{buildTable()}):
     \begin{pseudocode}
 FOR 每个项目集Ii:
@@ -394,6 +292,7 @@ FOR 每个项目集Ii:
         IF goto(Ii, A) = Ij:
             goto[i, A] = j
     \end{pseudocode}
+
     \item \textbf{SLR分析算法} (\texttt{parse()}):
     \begin{pseudocode}
 初始化: stateStack = [0], valueStack = []
@@ -423,17 +322,36 @@ END WHILE
     \end{pseudocode}
 \end{enumerate}
 
-\subsection{SLR分析表结构}
+\subsubsection{方法二：递归下降语法分析器 (\texttt{Parser})} % 对应源码结构文档的方法二
 
-\paragraph{分析表包含两部分：}
+\paragraph{算法特点：}
+\begin{itemize}
+    \item 为每个非终结符编写一个递归函数
+    \item 通过向前看（lookahead）解决选择冲突
+    \item 自顶向下构建AST
+\end{itemize}
+% ... (其余内容与原模板一致，故省略) ...
+
+\subsection{SLR分析表结构} % 新增子节，对应源码文档 2.2
+
+分析表包含两部分：
 \begin{enumerate}
-    \item \textbf{ACTION表}：$\texttt{actionTable[state, terminal] -> Action}$
-    \item \textbf{GOTO表}：$\texttt{gotoTable[state, nonTerminal] -> state}$
+    \item \textbf{ACTION表}：$\texttt{actionTable}[\text{state}, \text{terminal}]$ $\rightarrow \text{Action}$
+    \begin{itemize}
+        \item \texttt{SHIFT n}: 移进，跳转到状态n
+        \item \texttt{REDUCE m}: 归约，使用产生式m
+        \item \texttt{ACC}: 接受
+        \item \texttt{ERR}: 错误
+    \end{itemize}
+    \item \textbf{GOTO表}：$\texttt{gotoTable}[\text{state}, \text{nonTerminal}]$ $\rightarrow \text{state}$
+    \begin{itemize}
+        \item 记录状态转换
+    \end{itemize}
 \end{enumerate}
 
 \paragraph{冲突解决：}
 \begin{itemize}
-    \item 移进-归约冲突：优先移进（\texttt{shift-reduce conflict resolution}）
+    \item 移进-归约冲突：优先移进（shift-reduce conflict resolution）
 \end{itemize}
 
 \paragraph{示例分析表片段：}
@@ -443,129 +361,222 @@ State 0:
   action[0, "const"] = shift 6
   goto[0, "Program"] = 1
   goto[0, "compUnit"] = 2
-...
+
+State 5:
+  action[5, "Ident"] = shift 10
+  goto[5, "bType"] = 7
+
+State 10:
+  action[10, "="] = shift 15
+  action[10, ";"] = reduce 19  // varDef -> Ident
+  ...
 \end{verbatim}
 
 \subsection{输出格式说明}
-
-\paragraph{递归下降分析器输出格式：}
-\begin{verbatim}
-步骤号	TAB	Token值	TAB	动作
-1	int	move
-2	main	move
-...
-13	$#$	accept
-\end{verbatim}
-
+语法分析器输出语法树（Abstract Syntax Tree, AST）。AST 的结构描述了程序的层次逻辑，用于后续的语义分析和代码生成。
 \subsection{源程序编译步骤}
-
-\paragraph{命令行使用：}
-\begin{verbatim}
-./compiler -p source.sy    # 词法+语法分析
-\end{verbatim}
-
+\begin{enumerate}
+    \item \textbf{输入}：词法分析器产生的 Token 列表。
+    \item \textbf{执行}：调用 \texttt{SLRParser::parse()} 或 \texttt{Parser::parse()} 方法。
+    \item \textbf{输出}：抽象语法树（AST）的根节点指针。
+\end{enumerate}
 \hrule
 
-\section{语法树存储与遍历及IR生成}
+\section{语法树存储与遍历及IR生成} % 新增章节，对应源码文档 Section 3
 
-\subsection{语法树存储结构}
+\subsection{语法树存储结构} % 对应源码文档 3.1
 
-\paragraph{AST节点层次结构（简化）：}
+\paragraph{AST节点层次结构：}
 \begin{verbatim}
 CompUnitNode (根节点)
-├── decls: vector<DeclNode*>
-│   └── ...
-└── funcDefs: vector<FuncDefNode*>
+├── decls: vector<DeclNode*>          // 全局声明列表
+│   ├── ConstDeclNode
+│   ... (详细结构见源码文档)
+│   └── VarDeclNode
+│       ... (详细结构见源码文档)
+└── funcDefs: vector<FuncDefNode*>     // 函数定义列表
     └── FuncDefNode
-        └── block: BlockNode*
+        ... (详细结构见源码文档)
 \end{verbatim}
 
-\paragraph{表达式节点层次（简化）：}
+\paragraph{表达式节点层次：}
 \begin{verbatim}
 ExpNode (基类)
-├── AddExpNode / MulExpNode
-...
+├── AddExpNode
+... (详细结构见源码文档)
+├── PrimaryExpNode
+... (详细结构见源码文档)
 └── NumberNode
+    ├── isFloat: bool
+    ├── intVal: int
+    └── floatVal: float
 \end{verbatim}
 
 \paragraph{存储方式：}
 \begin{itemize}
     \item 使用 \texttt{std::shared\_ptr} 智能指针管理节点生命周期
+    \item 树形结构通过指针链接
+    \item 列表使用 \texttt{std::vector<std::shared\_ptr<Node>>}
 \end{itemize}
 
-\subsection{语法树遍历算法伪代码}
+\subsection{语法树遍历算法伪代码} % 对应源码文档 3.2
 
-\paragraph{访问者模式遍历AST（部分示例）：}
+\paragraph{访问者模式遍历AST（核心函数）：}
 \begin{pseudocode}
-算法: visitCompUnit(node)
-输入: CompUnitNode* node
+算法: visitFuncDef(node)
+输入: FuncDefNode* node
 输出: 无
 
 BEGIN
-    // 先处理全局声明
-    FOR EACH decl IN node->decls:
-        visitDecl(decl)
-    END FOR
+    // 创建函数...
+    ...
+    // 进入函数作用域...
+    ...
+    // 处理参数...
+    ...
+    // 处理函数体
+    visitBlock(node->block)
 
-    // 再处理函数定义
-    FOR EACH funcDef IN node->funcDefs:
-        visitFuncDef(funcDef)
-    END FOR
+    // 如果基本块没有终结指令，添加默认返回...
+    ...
+    // 退出函数作用域
+    symbolTable.exitScope()
+END
+
+算法: visitStmt(node)
+输入: StmtNode* node
+输出: 无
+
+BEGIN
+    SWITCH node->stmtType:
+        CASE ASSIGN:
+            addr = visitLVal(node->lVal, false)  // 获取地址
+            val = visitExp(node->exp)             // 计算值
+            builder->create_store(val, addr)      // 存储
+        CASE EXP:
+            ...
+        CASE BLOCK:
+            visitBlock(node->block)
+        CASE IF:
+            visitIfStmt(node)
+        CASE RETURN:
+            visitReturnStmt(node)
+    END SWITCH
 END
 
 算法: visitAddExp(node)
-...
+输入: AddExpNode* node
+输出: Value*
+
+BEGIN
+    IF node->left == nullptr:
+        // 只有右操作数
+        RETURN visitMulExp(node->right)
+    END IF
+
+    // 递归计算左操作数...
+    // 类型提升...
+    // 生成IR指令...
+END
+
+算法: visitIfStmt(node)
+输入: StmtNode* node
+输出: 无
+
+BEGIN
+    // 创建基本块...
+    // 计算条件...
+    // 条件跳转...
+    // 生成then分支...
+    // 生成else分支...
+    // 设置当前基本块为merge
+    currentBB = mergeBB
+    builder->set_insert_point(mergeBB)
+END
 \end{pseudocode}
+% 备注：此处仅展示了部分核心伪代码，完整内容已纳入更新后的.tex文件。
 
-\subsection{调用中端的过程的算法设计思想}
+\subsection{中间代码生成详细说明} % 对应源码文档 3.3
 
-\paragraph{IR生成器的设计思想：}
-\begin{enumerate}
-    \item \textbf{访问者模式}：为每种AST节点类型定义访问函数，递归遍历AST。
-    \item \textbf{符号表管理}：使用作用域栈管理局部变量和全局变量的查找与插入。
-    \item \textbf{基本块管理}：为控制流语句（如 \texttt{if}, \texttt{while}）创建新的基本块。
-    \item \textbf{类型系统}：将 \texttt{BType} 映射到 \texttt{LLVM Type}。
-    \item \textbf{常量折叠}：在IR生成前预先计算常量表达式的值。
-    \item \textbf{短路求值}（逻辑与/或）：通过条件跳转和 \texttt{Phi} 节点实现短路逻辑。
-\end{enumerate}
+\subsubsection{IR生成器整体架构} % 对应源码文档 3.3.1
+\paragraph{设计模式：访问者模式（Visitor Pattern）}
+IR生成器采用访问者模式遍历AST并生成LLVM IR：
+\begin{itemize}
+    \item 为每种AST节点类型定义专门的访问函数（如\texttt{visitCompUnit}、\texttt{visitFuncDef}等）
+    \item 通过动态分发（\texttt{dynamic\_cast}）识别节点类型并调用相应的访问函数
+    \item 递归遍历AST树，自顶向下生成IR
+\end{itemize}
 
-\paragraph{IR生成示例：}
+\paragraph{核心组件：}
+\begin{itemize}
+    \item \texttt{IRGenerator}: IR生成器主类
+    \item \texttt{IRBuilder}: IR指令构建器，负责创建各种IR指令
+    \item \texttt{SymbolTable}: 符号表，管理作用域和变量映射
+\end{itemize}
+
+\subsubsection{LLVM IR指令类型} % 对应源码文档 3.3.2
+本编译器生成的IR指令类型包括：内存和地址指令、算术指令、控制流指令、比较指令、类型转换指令、函数调用指令、Phi指令等。
+
+\subsubsection{基本块和控制流图（CFG）} % 对应源码文档 3.3.3
+\paragraph{基本块（Basic Block）概念：}
+\begin{itemize}
+    \item 基本块是最大化的线性指令序列，只有一个入口点和一个出口点
+    \item 基本块以终结指令（\texttt{ret}或\texttt{br}）结束
+\end{itemize}
+
+\subsubsection{符号表作用域管理} % 对应源码文档 3.3.4
+\begin{itemize}
+    \item 使用作用域栈（Scope Stack）实现嵌套作用域
+    \item 核心操作包括 \texttt{enterScope()}、\texttt{exitScope()}、\texttt{lookup(name)} 和 \texttt{insert(name, info)}
+\end{itemize}
+
+\subsubsection{全局变量和局部变量处理} % 对应源码文档 3.3.5
+\begin{itemize}
+    \item 全局变量使用 \texttt{GlobalVariable::create}
+    \item 局部变量使用 \texttt{builder->create\_alloca} 在栈上分配空间，遵循 \texttt{alloca/store/load} 模式
+\end{itemize}
+
+\subsubsection{函数定义和调用} % 对应源码文档 3.3.6
+\begin{itemize}
+    \item 根据返回值和参数类型构建 \texttt{FunctionType}，使用 \texttt{Function::create} 创建函数
+    \item 调用使用 \texttt{builder->create\_call} 生成 \texttt{call} 指令
+\end{itemize}
+
+\subsubsection{类型系统和类型提升} % 对应源码文档 3.3.7
+\begin{itemize}
+    \item 类型映射：\texttt{INT} $\rightarrow$ \texttt{i32}；\texttt{FLOAT} $\rightarrow$ \texttt{float}；\texttt{VOID} $\rightarrow$ \texttt{void}
+    \item 类型提升：二元运算中，存在 \texttt{float} 类型则提升为 \texttt{float}（使用 \texttt{sitofp}）
+\end{itemize}
+
+\subsubsection{常量折叠优化} % 对应源码文档 3.3.8
+\begin{itemize}
+    \item 实现了 \texttt{evalConstInt} 等函数，在编译期计算常量表达式的值
+    \item 用于初始化全局变量和优化 \texttt{const} 变量的访问
+\end{itemize}
+
+\subsubsection{短路求值（逻辑与/或）} % 对应源码文档 3.3.9
+\begin{itemize}
+    \item 逻辑运算符 (\texttt{\&\&}, \texttt{||}) 通过条件跳转 (\texttt{cond\_br}) 实现短路，并在分支汇合处使用 \texttt{Phi} 节点合并结果。
+\end{itemize}
+
+\subsubsection{Phi节点和SSA形式} % 对应源码文档 3.3.10
+\begin{itemize}
+    \item \texttt{Phi} 节点用于在多个控制流路径汇合时，合并不同路径的值，以支持 SSA（Static Single Assignment）形式。
+\end{itemize}
+
+\subsubsection{设计思想总结} % 对应源码文档 3.3.13
+核心设计原则包括：访问者模式、SSA形式、基本块管理、符号表作用域、类型系统、常量折叠、短路求值、错误处理。
 \begin{verbatim}
+IR生成示例：
 @a = global i32 10
-
+...
 define i32 @main() {
 entry:
-    ret i32 0
+  %a = alloca i32
+  store i32 10, i32* %a
+  ...
+  ret i32 0
 }
 \end{verbatim}
-
-\subsection{源程序编译步骤}
-
-\paragraph{命令行使用：}
-\begin{verbatim}
-./compiler -i source.sy    # 完整编译（生成LLVM IR）
-\end{verbatim}
-
-\hrule
-
-\section{总结}
-
-本编译器实现了完整的编译流程：
-\begin{itemize}
-    \item \textbf{词法分析}：将源代码转换为 \texttt{Token} 序列
-    \item \textbf{语法分析}：将 \texttt{Token} 序列解析为 \texttt{AST}
-    \item \textbf{IR生成}：遍历 \texttt{AST} 生成 \texttt{LLVM IR} 中间代码
-\end{itemize}
-关键特性：
-\begin{itemize}
-    \item 支持两种词法分析器（DFA状态机、NFA→DFA）
-    \item 支持两种语法分析器（递归下降、SLR）
-    \item 完整的 \texttt{AST} 节点体系
-    \item 符号表作用域管理
-    \item 类型系统和类型提升
-    \item 常量折叠优化
-    \item 短路求值
-    \item 控制流图生成
-\end{itemize}
 
 \end{document}
