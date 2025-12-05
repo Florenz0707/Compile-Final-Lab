@@ -2,7 +2,7 @@
  * @file SLRParser.cpp
  * @brief SLR Parser implementation with AST generation
  * @version 1.0.0
- * @date 2024
+ * @date 2025
  */
 
 #include "SLRParser.h"

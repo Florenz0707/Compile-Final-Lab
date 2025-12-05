@@ -2,7 +2,7 @@
  * @file Lexer.cpp
  * @brief 词法分析器实现文件
  * @version 1.0.0
- * @date 2024
+ * @date 2025
  */
 
 #include "Lexer.h"

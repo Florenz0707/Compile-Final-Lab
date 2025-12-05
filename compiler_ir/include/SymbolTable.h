@@ -2,7 +2,7 @@
  * @file SymbolTable.h
  * @brief 符号表管理头文件
  * @version 1.0.0
- * @date 2024
+ * @date 2025
  */
 
 #ifndef SYSYC_SYMBOLTABLE_H

@@ -2,7 +2,7 @@
  * @file IRGenerator.cpp
  * @brief IR生成器实现文件
  * @version 1.0.0
- * @date 2024
+ * @date 2025
  */
 
 #include "IRGenerator.h"
@@ -13,7 +13,7 @@
 
 IRGenerator::IRGenerator(const std::string& sourceFileName) {
     // 创建模块
-    module = new Module("sysy2022_compiler");
+    module = new Module("sysy2025_compiler");
 
     // 创建IR构建器（初始基本块为nullptr）
     builder = new IRBuilder(nullptr, module);

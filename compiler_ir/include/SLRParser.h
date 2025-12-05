@@ -2,7 +2,7 @@
  * @file SLRParser.h
  * @brief SLR Parser with AST generation (adapted for compiler_ir)
  * @version 1.0.0
- * @date 2024
+ * @date 2025
  */
 
 #ifndef SYSYC_SLRPARSER_H

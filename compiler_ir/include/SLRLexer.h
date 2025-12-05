@@ -2,7 +2,7 @@
  * @file SLRLexer.h
  * @brief SLR-based Lexer wrapper (adapted for compiler_ir)
  * @version 1.0.0
- * @date 2024
+ * @date 2025
  */
 
 #ifndef SYSYC_SLRLEXER_H
