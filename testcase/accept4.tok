@@ -1,4 +1,3 @@
-File: accept4.sy
 int	<KW,1>
 main	<KW,5>
 (	<SE,23>
