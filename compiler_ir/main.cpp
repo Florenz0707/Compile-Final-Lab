@@ -127,7 +127,6 @@ void runAllTestcases(const std::string& testDir) {
 
         {
             std::ofstream tokFile(stem + ".tok");
-            tokFile << "File: " << testCase << std::endl;
             for (const auto& token : tokens) {
                 if (token.type != TokenType::END_OF_FILE) {
                     tokFile << token.toString() << std::endl;
