@@ -1,7 +1,7 @@
 /*!
  * @file Lexer.cpp
  * @brief 词法分析器实现文件
- * @version 1.0.0
+ * @version 1.0.2
  * @date 2025
  */
 
@@ -17,11 +17,15 @@ Lexer::Lexer() : pos(0), line(1), column(1) {
 
 void Lexer::initKeywords() {
     // 关键字不区分大小写
-    // 注意: main不作为关键字，而是普通标识符
+    // 注意: main 不加入 keywords 表中，作为普通标识符 IDN 扫描。
+    // 原因：Parser (SLRParser) 通常期望 main 是一个 Ident (IDN) 以匹配 funcDef 规则。
+    // 输出时，Token::toString 会特殊判断并将其打印为 <KW, 5>。
+    
     keywords["int"] = TokenType::KW_INT;
     keywords["void"] = TokenType::KW_VOID;
     keywords["return"] = TokenType::KW_RETURN;
     keywords["const"] = TokenType::KW_CONST;
+    // main is intentionally omitted here
     keywords["float"] = TokenType::KW_FLOAT;
     keywords["if"] = TokenType::KW_IF;
     keywords["else"] = TokenType::KW_ELSE;
@@ -143,6 +147,7 @@ Token Lexer::scanIdentifier() {
         return Token(it->second, value, startLine, startCol);
     }
     
+    // main 将返回 IDN 类型，但 Token::toString 会将其格式化为 KW
     return Token(TokenType::IDN, value, startLine, startCol);
 }
 
@@ -226,7 +231,7 @@ Token Lexer::scanOperator() {
                 advance();
                 return Token(TokenType::OP_NE, "!=", startLine, startCol);
             }
-            // 单独的!是逻辑非运算符
+            // 单独的!是逻辑非运算符 (Code 29, not in main list 1-28 but kept for logic)
             return Token(TokenType::OP_NOT, "!", startLine, startCol);
         case '&':
             advance();
@@ -336,7 +341,8 @@ void Lexer::printTokens() const {
 std::string Lexer::getTokensString() const {
     std::stringstream ss;
     for (const auto& token : tokens) {
-        if (token.type != TokenType::END_OF_FILE) {
+        // 仅输出实验说明书要求的 Token 类型
+        if (token.shouldOutput()) {
             ss << token.toString() << std::endl;
         }
     }
