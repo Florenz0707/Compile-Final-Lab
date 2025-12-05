@@ -10,9 +10,38 @@
 \usepackage{fontspec} % 允许使用系统字体
 \usepackage{ctex}
 
+% 配置verbatim环境使用支持Unicode的等宽字体
+% 设置等宽字体为支持Unicode的字体（fontspec会自动查找系统字体）
+% Windows系统优先使用Consolas，如果不可用则自动回退到其他支持Unicode的等宽字体
+\setmonofont{Consolas}[Scale=0.9]
+
+% 修复xeCJK的verbatim字体缩放警告
+% 设置CJK等宽字体的缩放比例，解决xeCJKVerbAddon警告
+% 根据警告信息，设置Scale=0.9896到CJKfamily \CJKttdefault
+\setCJKmonofont{FangSong}[Scale=0.9896]
+
+% 修复FangSong字体斜体形状未定义的警告
+% 使用xeCJK包提供的字体设置，将斜体形状映射到正常形状
+% 这样可以避免"Font shape `TU/FangSong(0)/m/it' undefined"警告
+% 设置FangSong字体的斜体形状为正常形状（因为FangSong没有真正的斜体）
+\setCJKmainfont{FangSong}[ItalicFont=FangSong]
+
+% 如果Consolas不可用，可以尝试以下字体之一（取消注释）：
+% \setmonofont{Courier New}[Scale=0.9]
+% \setmonofont{DejaVu Sans Mono}[Scale=0.9]
+% \setmonofont{SimSun}[Scale=0.9]  % 宋体也支持这些Unicode字符
+
 % --- TOC 深度设置 (新增或修改) ---
-\setcounter{tocdepth}{3} % 目录深度到 subsubsection
-\setcounter{secnumdepth}{3} % 编号深度到 subsubsection
+\setcounter{tocdepth}{3} % 目录深度到 subsubsection（显示到三级标题）
+\setcounter{secnumdepth}{3} % 编号深度到 subsubsection（编号到三级标题）
+
+% --- 目录格式设置 ---
+% 设置目录中章节标题的字体大小和间距
+\makeatletter
+\renewcommand{\@pnumwidth}{2.5em}  % 页码宽度
+\renewcommand{\@tocrmarg}{3.5em}   % 右边界距
+\renewcommand{\@dotsep}{4.5}        % 点线间距
+\makeatother
 
 % 修正非英语语言环境下的列表标签
 \usepackage{enumitem}
@@ -22,15 +51,7 @@
 \usepackage{amsmath} % 数学公式
 \usepackage{booktabs} % 用于 \addlinespace，改善表格线条
 \usepackage{graphicx} % 图像支持 (封面占位符需要)
-\usepackage{hyperref} % 超链接 (始终最后加载)
 \usepackage{indentfirst}
-\hypersetup{
-    colorlinks=true,
-    linkcolor=blue,
-    filecolor=magenta,
-    urlcolor=cyan,
-    pdftitle={编译器构造报告},
-}
 
 % 定义用于伪代码和代码块的样式
 \usepackage{listings}
@@ -43,6 +64,11 @@
     framerule=0pt,
 }
 
+% 配置verbatim环境使用支持Unicode的字体
+% 重新定义verbatim环境以使用配置的等宽字体
+\usepackage{fancyvrb}
+\fvset{fontsize=\small}
+
 % 定义伪代码环境：将所有的 \lstset 参数都放在这里
 \lstnewenvironment{pseudocode}[1][]{
     \lstset{
@@ -53,42 +79,46 @@
 }{}
 
 % ---------------------------
-% 使用 titletoc 美化目录
+% 使用 titletoc 美化目录（必须在hyperref之前）
 % ---------------------------
 \usepackage{titletoc}
 
-% 目录标题上下横线
-\titlecontents{toc}
-  [0pt]
-  {\vspace{0.5em}}
-  {\bfseries 目录\\[0.5em]\rule{\textwidth}{0.4pt}}
-  {}
-  {\vspace{0.5em}\rule{\textwidth}{0.4pt}}
-  []
+% hyperref 必须在最后加载（在titletoc之后）
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+    pdftitle={编译器构造报告},
+}
 
-% section
+% section - 一级标题格式
 \titlecontents{section}
-  [0em]                      % 缩进
-  {\vspace{0.25em}}          % 之前的间距
-  {\contentslabel{2em}}      % 章节编号宽度
-  {}
-  {\titlerule*[0.5em]{.}\contentspage}
+  [0em]                      % 左缩进
+  {\vspace{0.4em}\bfseries}  % 之前的间距和格式（加粗）
+  {\contentslabel{2.5em}}     % 章节编号宽度和格式
+  {}                          % 无编号时的格式（空，使用默认）
+  {\titlerule*[0.8em]{.}\contentspage}  % 点线和页码
+  [\vspace{0.2em}]            % 之后的间距
 
-% subsection
+% subsection - 二级标题格式
 \titlecontents{subsection}
-  [1.5em]
-  {\vspace{0.15em}}
-  {\contentslabel{3em}}
-  {}
-  {\titlerule*[0.5em]{.}\contentspage}
+  [2em]                       % 左缩进
+  {\vspace{0.3em}}            % 之前的间距
+  {\contentslabel{3em}}       % 章节编号宽度和格式
+  {}                          % 无编号时的格式（空，使用默认）
+  {\titlerule*[0.8em]{.}\contentspage}  % 点线和页码
+  [\vspace{0.15em}]           % 之后的间距
 
-% subsubsection
+% subsubsection - 三级标题格式
 \titlecontents{subsubsection}
-  [3em]
-  {\vspace{0.1em}}
-  {\contentslabel{4em}}
-  {}
-  {\titlerule*[0.5em]{.}\contentspage}
+  [4.5em]                     % 左缩进
+  {\vspace{0.2em}}            % 之前的间距
+  {\contentslabel{4em}}       % 章节编号宽度和格式
+  {}                          % 无编号时的格式（空，使用默认）
+  {\titlerule*[0.8em]{.}\contentspage}  % 点线和页码
+  [\vspace{0.1em}]            % 之后的间距
 
 
 
@@ -147,17 +177,25 @@
 % --- 目录页 ---
 
 \clearpage
-\thispagestyle{empty}
 
+% 目录标题区域
 \begin{center}
+    \vspace*{2cm}
     {\Huge \textbf{目 录}}
+    \vspace{0.8cm}
+
+    % 添加一条分隔线
+    \rule{0.8\textwidth}{0.4pt}
+    \vspace{1cm}
 \end{center}
 
-\vspace{1cm}
-
+% 生成目录（自动生成所有章节）
+% 注意：首次编译可能不显示目录，需要编译两次才能生成完整的目录
 \tableofcontents
 
 \clearpage
+\setcounter{page}{1}  % 从正文开始重新计数页码
+\pagestyle{plain}     % 设置正文页码样式
 
 
 
@@ -166,48 +204,233 @@
 \section{词法分析器}
 
 \subsection{算法描述}
+
 本项目实现了两种词法分析器：
 
 \subsubsection{方法一：基于DFA状态机的词法分析器 (\texttt{Lexer})}
+
 \paragraph{算法流程：}
 \begin{enumerate}
-    \item \textbf{初始化阶段}：初始化关键字表、设置指针 \texttt{pos = 0}，行号 \texttt{line = 1}，列号 \texttt{column = 1}。
+    \item \textbf{初始化阶段}：
+    \begin{itemize}
+        \item 初始化关键字表（int, void, return, const, float, if, else）
+        \item 设置当前位置指针 \texttt{pos = 0}，行号 \texttt{line = 1}，列号 \texttt{column = 1}
+    \end{itemize}
+
     \item \textbf{主分析循环} (\texttt{tokenize()} 函数)：
-        \begin{itemize}
-            \item 跳过空白字符和注释。
-            \item 根据首字符判断：字母/下划线（标识符或关键字）、数字（整数或浮点数）、界符、运算符。
-            \item 对应调用 \texttt{scanIdentifier()}、\texttt{scanNumber()} 等方法进行扫描。
-        \end{itemize}
+    \begin{pseudocode}
+WHILE pos < source.length():
+    跳过空白字符 (空格、制表符、换行符)
+    跳过注释 (// 行注释 或 /* */ 块注释)
+
+    IF 当前位置字符是字母或下划线:
+        调用 scanIdentifier() 扫描标识符或关键字
+    ELSE IF 当前位置字符是数字:
+        调用 scanNumber() 扫描整数或浮点数
+    ELSE IF 当前位置字符是界符 ( ( ) { } ; , ):
+        调用 scanSeparator() 扫描界符
+    ELSE IF 当前位置字符是运算符 ( + - * / % = < > ! & | ):
+        调用 scanOperator() 扫描运算符
+    ELSE:
+        创建ERROR token
+
+    将扫描到的token添加到tokens列表
+END WHILE
+
+添加EOF token
+    \end{pseudocode}
+
+    \item \textbf{DFA状态转换}：
+    \begin{itemize}
+        \item \texttt{START}: 初始状态
+        \item \texttt{IN\_ID}: 标识符状态（字母/下划线开头，后跟字母/数字/下划线）
+        \item \texttt{IN\_NUM}: 整数状态（数字序列）
+        \item \texttt{IN\_FLOAT}: 浮点数状态（数字.数字）
+        \item \texttt{IN\_ASSIGN}: =状态（可能是=或==）
+        \item \texttt{IN\_LT}: <状态（可能是<或<=）
+        \item \texttt{IN\_GT}: >状态（可能是>或>=）
+        \item \texttt{IN\_NOT}: !状态（需要!=）
+        \item \texttt{IN\_AND}: \&状态（需要\&\&）
+        \item \texttt{IN\_OR}: |状态（需要||）
+        \item \texttt{IN\_COMMENT\_LINE}: 行注释状态
+        \item \texttt{IN\_COMMENT\_BLOCK}: 块注释状态
+    \end{itemize}
 \end{enumerate}
+
 \subsubsection{方法二：基于NFA→DFA转换的词法分析器 (\texttt{SLRLexer})}
-\paragraph{算法特点：}
-\begin{itemize}
-    \item 使用正则表达式工具自动生成NFA和DFA。
-    \item 分析器读取 DFA 状态转换表进行词法分析。
-\end{itemize}
+
+\paragraph{算法流程：}
+\begin{enumerate}
+    \item \textbf{构建NFA} (\texttt{buildDFA()} 函数)：
+    \begin{itemize}
+        \item 为关键字、标识符、整数、浮点数、运算符、界符分别构建NFA
+        \item 使用epsilon转换合并所有NFA为一个组合NFA
+        \item 通过子集构造法（Subset Construction）将NFA转换为DFA
+        \item 使用DFA最小化算法优化DFA
+    \end{itemize}
+
+    \item \textbf{最长匹配算法} (\texttt{analyze()} 函数)：
+    \begin{pseudocode}
+初始化: currentState = dfa.start, startPos = pos
+
+WHILE pos < source.length():
+    跳过空白字符和注释
+
+    currentState = dfa.start
+    startPos = pos
+    lastAcceptState = nullptr
+    lastAcceptPos = -1
+    currentPos = pos
+
+    // 最长匹配
+    WHILE currentPos < source.length():
+        char c = sourceCode[currentPos]
+        IF currentState有c的转换:
+            currentState = currentState.transitions[c]
+            currentPos++
+            IF currentState是接受状态:
+                lastAcceptState = currentState
+                lastAcceptPos = currentPos
+        ELSE:
+            BREAK
+    END WHILE
+
+    IF lastAcceptState != nullptr AND lastAcceptPos > startPos:
+        创建token: Token(lastAcceptState->acceptType,
+                       sourceCode.substr(startPos, lastAcceptPos - startPos))
+        pos = lastAcceptPos
+    ELSE:
+        创建ERROR token
+        pos++
+END WHILE
+
+添加EOF token
+    \end{pseudocode}
+\end{enumerate}
 
 \subsection{输出格式说明}
-词法分析器将源程序分解为一系列 token 序列，每个 token 包含：
+
+\textbf{Token输出格式：} \texttt{[单词符号] TAB <[类型],[属性]>}
+
+\textbf{类型分类：}
 \begin{itemize}
-    \item \textbf{Token 类型}：如 \texttt{KEYWORD\_INT}, \texttt{IDENTIFIER}, \texttt{NUMBER}, \texttt{SEMI}. % <-- 修复: 使用 \texttt{} 并转义下划线
-    \item \textbf{Token 值}：如关键字的名称，标识符的名称，数字的实际值。
-    \item \textbf{位置信息}：行号和列号，用于错误报告。
+    \item \textbf{KW (关键字)}: int(1), void(2), return(3), const(4), float(6), if(7), else(8)
+    \item \textbf{OP (运算符)}: +(30), -(31), *(32), /(33), \%(34), =(35), >(36), <(37), ==(38), <=(39), >=(40), !=(41), \&\&(42), ||(43), !(44)
+    \item \textbf{SE (界符)}: ((50), )(51), \{(52), \}(53), ;(54), ,(55)
+    \item \textbf{IDN (标识符)}: \texttt{<IDN,标识符名称>}
+    \item \textbf{INT (整数)}: \texttt{<INT,整数值>}
+    \item \textbf{FLOAT (浮点数)}: \texttt{<FLOAT,浮点数值>}
+    \item \textbf{EOF (文件结束)}: \texttt{\$}
 \end{itemize}
+
 \paragraph{示例输出：}
 \begin{verbatim}
-[Token_Type: KEYWORD_INT, Value: int, Line: 1, Column: 1]
-[Token_Type: IDENTIFIER, Value: a, Line: 1, Column: 5]
-[Token_Type: ASSIGN, Value: =, Line: 1, Column: 7]
-[Token_Type: NUMBER, Value: 10, Line: 1, Column: 9]
-[Token_Type: SEMI, Value: ;, Line: 1, Column: 11]
+int	<KW,1>
+main	<IDN,main>
+(	<SE,50>
+)	<SE,51>
+{	<SE,52>
+return	<KW,3>
+10	<INT,10>
+;	<SE,54>
+}	<SE,53>
 \end{verbatim}
 
+\subsection{代码实现细节}
+
+\subsubsection{Token结构定义}
+
+\textbf{Token结构体：}
+\begin{lstlisting}[language=C++]
+struct Token {
+    TokenType type;      // Token类型
+    std::string value;   // Token值
+    int line;            // 行号
+    int column;          // 列号
+
+    // 方法：获取类型字符串表示、输出格式化Token等
+    std::string getTypeString() const;
+    std::string toString() const;
+};
+\end{lstlisting}
+
+\subsubsection{关键字表初始化}
+
+\textbf{功能：}初始化关键字映射表，将关键字字符串映射到对应的TokenType。
+
+\textbf{函数声明：}
+\begin{lstlisting}[language=C++]
+void Lexer::initKeywords();
+\end{lstlisting}
+
+\textbf{功能说明：}建立关键字（int, void, return, const, float, if, else）到TokenType的映射关系，关键字不区分大小写。
+
+\subsubsection{标识符扫描实现}
+
+\textbf{功能：}扫描标识符或关键字。
+
+\textbf{函数声明：}
+\begin{lstlisting}[language=C++]
+Token Lexer::scanIdentifier();
+\end{lstlisting}
+
+\textbf{功能说明：}扫描字母、数字和下划线组成的标识符，然后检查是否是关键字（不区分大小写），如果是关键字则返回对应的关键字Token，否则返回标识符Token。
+
+\subsubsection{数字扫描实现}
+
+\textbf{功能：}扫描整数或浮点数。
+
+\textbf{函数声明：}
+\begin{lstlisting}[language=C++]
+Token Lexer::scanNumber();
+\end{lstlisting}
+
+\textbf{功能说明：}扫描数字序列，如果遇到小数点且后面有数字，则识别为浮点数，否则识别为整数。
+
+\subsubsection{注释处理实现}
+
+\textbf{功能：}跳过行注释（//）或块注释（/* */）。
+
+\textbf{函数声明：}
+\begin{lstlisting}[language=C++]
+bool Lexer::skipComment();
+\end{lstlisting}
+
+\textbf{功能说明：}检测并跳过注释。行注释跳过到行尾，块注释跳过到结束标记\texttt{*/}。如果块注释未闭合则报错。
+
 \subsection{源程序编译步骤}
+
+\textbf{使用词法分析器的编译步骤：}
+
 \begin{enumerate}
-    \item \textbf{输入}：C--源程序文件。
-    \item \textbf{执行}：调用 \texttt{Lexer::tokenize()} 方法。
-    \item \textbf{输出}：Token 列表。
+    \item \textbf{加载源文件}：
+    \begin{lstlisting}[language=C++]
+Lexer lexer;
+lexer.loadFromFile("source.sy");
+    \end{lstlisting}
+
+    \item \textbf{执行词法分析}：
+    \begin{lstlisting}[language=C++]
+lexer.tokenize();
+    \end{lstlisting}
+
+    \item \textbf{获取Token序列}：
+    \begin{lstlisting}[language=C++]
+const auto& tokens = lexer.getTokens();
+    \end{lstlisting}
+
+    \item \textbf{输出结果}：
+    \begin{lstlisting}[language=C++]
+lexer.printTokens();  // 打印到标准输出
+// 或
+std::string tokenStr = lexer.getTokensString();  // 获取字符串
+    \end{lstlisting}
 \end{enumerate}
+
+\textbf{命令行使用：}
+\begin{verbatim}
+./compiler -l source.sy    # 仅词法分析
+\end{verbatim}
 \hrule
 
 \section{语法分析器}
@@ -322,7 +545,7 @@ END WHILE
     \end{pseudocode}
 \end{enumerate}
 
-\subsubsection{方法二：递归下降语法分析器 (\texttt{Parser})} % 对应源码结构文档的方法二
+\subsubsection{方法二：递归下降语法分析器 (\texttt{Parser})}
 
 \paragraph{算法特点：}
 \begin{itemize}
@@ -330,7 +553,33 @@ END WHILE
     \item 通过向前看（lookahead）解决选择冲突
     \item 自顶向下构建AST
 \end{itemize}
-% ... (其余内容与原模板一致，故省略) ...
+
+\textbf{主要分析函数：}
+\begin{itemize}
+    \item \texttt{parseCompUnit()}: 解析编译单元
+    \item \texttt{parseConstDecl()}: 解析常量声明
+    \item \texttt{parseVarDecl()}: 解析变量声明
+    \item \texttt{parseFuncDef()}: 解析函数定义
+    \item \texttt{parseStmt()}: 解析语句
+    \item \texttt{parseExp()}: 解析表达式（通过parseAddExp）
+    \item \texttt{parseCond()}: 解析条件表达式
+\end{itemize}
+
+\textbf{算法流程示例（parseAddExp）：}
+\begin{pseudocode}
+parseAddExp():
+    left = parseMulExp()
+
+    WHILE 当前token是 + 或 -:
+        保存运算符op
+        前进token
+        right = parseMulExp()
+        创建新的AddExpNode，left作为左子树，right作为右子树
+        left = 新节点
+    END WHILE
+
+    RETURN left
+\end{pseudocode}
 
 \subsection{SLR分析表结构} % 新增子节，对应源码文档 2.2
 
@@ -373,13 +622,101 @@ State 10:
 \end{verbatim}
 
 \subsection{输出格式说明}
-语法分析器输出语法树（Abstract Syntax Tree, AST）。AST 的结构描述了程序的层次逻辑，用于后续的语义分析和代码生成。
+
+\textbf{递归下降分析器输出格式：}
+\begin{verbatim}
+步骤号	TAB	Token值	TAB	动作
+1	int	move
+2	main	move
+3	(	move
+4	)	move
+5	{	move
+6	return	move
+7	10	move
+8	;	move
+9	Stmt	reduction
+10	Block	reduction
+11	FuncDef	reduction
+12	compUnit	reduction
+13	$#$	accept
+\end{verbatim}
+
+\textbf{动作类型：}
+\begin{itemize}
+    \item \texttt{move}: 移进（匹配终结符）
+    \item \texttt{reduction}: 归约（应用产生式）
+    \item \texttt{accept}: 接受
+    \item \texttt{error}: 错误
+\end{itemize}
+
+\subsection{代码实现细节}
+
+\subsubsection{递归下降分析器核心实现}
+
+\textbf{Token匹配和前进：}
+\begin{lstlisting}[language=C++]
+Token Parser::currentToken() const;  // 获取当前Token
+bool Parser::match(TokenType type);  // 匹配并前进Token
+bool Parser::expect(TokenType type, const std::string& msg);  // 期望匹配Token，失败则报错
+\end{lstlisting}
+
+\textbf{功能说明：}
+\begin{itemize}
+    \item \texttt{currentToken()}: 返回当前待处理的Token，如果已到文件末尾则返回EOF Token
+    \item \texttt{match()}: 如果当前Token类型匹配，则前进到下一个Token并返回true，否则返回false
+    \item \texttt{expect()}: 期望匹配指定类型的Token，如果失败则输出错误信息
+\end{itemize}
+
+\textbf{编译单元解析：}
+\begin{lstlisting}[language=C++]
+std::shared_ptr<CompUnitNode> Parser::parseCompUnit();
+\end{lstlisting}
+
+\textbf{功能说明：}解析编译单元，循环处理全局声明和函数定义。通过向前看（lookahead）区分函数定义和变量声明。
+
+\textbf{表达式解析（左结合）：}
+\begin{lstlisting}[language=C++]
+std::shared_ptr<AddExpNode> Parser::parseAddExp();
+\end{lstlisting}
+
+\textbf{功能说明：}解析加法表达式，处理左结合的\texttt{+}和\texttt{-}运算符。先解析第一个mulExp作为左操作数，然后循环处理后续的运算符和右操作数，构建左结合的AST。
+
+\subsubsection{AST节点创建示例}
+
+\textbf{函数定义节点创建：}
+\begin{lstlisting}[language=C++]
+std::shared_ptr<FuncDefNode> Parser::parseFuncDef();
+\end{lstlisting}
+
+\textbf{功能说明：}解析函数定义，包括返回类型、函数名、参数列表和函数体。返回类型可以是int、float或void。参数列表可能为空。
+
 \subsection{源程序编译步骤}
+
+\textbf{使用语法分析器的编译步骤：}
+
 \begin{enumerate}
-    \item \textbf{输入}：词法分析器产生的 Token 列表。
-    \item \textbf{执行}：调用 \texttt{SLRParser::parse()} 或 \texttt{Parser::parse()} 方法。
-    \item \textbf{输出}：抽象语法树（AST）的根节点指针。
+    \item \textbf{词法分析}：
+    \begin{lstlisting}[language=C++]
+SLRLexer lexer;
+auto tokens = lexer.analyze(sourceCode);
+    \end{lstlisting}
+
+    \item \textbf{语法分析}：
+    \begin{lstlisting}[language=C++]
+SLRParser parser;
+bool success = parser.parse(tokens);
+    \end{lstlisting}
+
+    \item \textbf{获取AST}：
+    \begin{lstlisting}[language=C++]
+auto ast = parser.getAST();
+    \end{lstlisting}
 \end{enumerate}
+
+\textbf{命令行使用：}
+\begin{verbatim}
+./compiler -p source.sy    # 词法+语法分析
+\end{verbatim}
 \hrule
 
 \section{语法树存储与遍历及IR生成} % 新增章节，对应源码文档 Section 3
@@ -391,21 +728,60 @@ State 10:
 CompUnitNode (根节点)
 ├── decls: vector<DeclNode*>          // 全局声明列表
 │   ├── ConstDeclNode
-│   ... (详细结构见源码文档)
+│   │   ├── bType: BType
+│   │   └── constDefs: vector<ConstDefNode*>
+│   │       └── ConstDefNode
+│   │           ├── ident: string
+│   │           └── initVal: ExpNode*
 │   └── VarDeclNode
-│       ... (详细结构见源码文档)
+│       ├── bType: BType
+│       └── varDefs: vector<VarDefNode*>
+│           └── VarDefNode
+│               ├── ident: string
+│               └── initVal: ExpNode* (可选)
+│
 └── funcDefs: vector<FuncDefNode*>     // 函数定义列表
     └── FuncDefNode
-        ... (详细结构见源码文档)
+        ├── returnType: BType
+        ├── ident: string
+        ├── params: vector<FuncFParamNode*>
+        └── block: BlockNode*
+            └── items: vector<BlockItemNode*>
+                ├── decl: DeclNode* (可选)
+                └── stmt: StmtNode* (可选)
+                    ├── ASSIGN: lVal + exp
+                    ├── EXP: exp (可选)
+                    ├── BLOCK: block
+                    ├── IF: cond + thenStmt + elseStmt (可选)
+                    └── RETURN: exp (可选)
 \end{verbatim}
 
 \paragraph{表达式节点层次：}
 \begin{verbatim}
 ExpNode (基类)
 ├── AddExpNode
-... (详细结构见源码文档)
+│   ├── left: AddExpNode* (可选)
+│   ├── op: BinaryOp (ADD/SUB)
+│   └── right: MulExpNode*
+│
+├── MulExpNode
+│   ├── left: MulExpNode* (可选)
+│   ├── op: BinaryOp (MUL/DIV/MOD)
+│   └── right: UnaryExpNode*
+│
+├── UnaryExpNode
+│   ├── PRIMARY: primaryExp
+│   ├── FUNC_CALL: funcName + args
+│   └── UNARY_OP: unaryOp + unaryExp
+│
 ├── PrimaryExpNode
-... (详细结构见源码文档)
+│   ├── PAREN_EXP: exp
+│   ├── LVAL: lVal
+│   └── NUMBER: number
+│
+├── LValNode
+│   └── ident: string
+│
 └── NumberNode
     ├── isFloat: bool
     ├── intVal: int
@@ -419,26 +795,238 @@ ExpNode (基类)
     \item 列表使用 \texttt{std::vector<std::shared\_ptr<Node>>}
 \end{itemize}
 
+\subsubsection{AST节点类定义}
+
+\textbf{AST节点基类：}
+\begin{lstlisting}[language=C++]
+class ASTNode {
+public:
+    virtual ~ASTNode() = default;
+    std::string type;  // 节点类型名称
+
+    ASTNode() : type("ASTNode") {}
+    explicit ASTNode(const std::string& t) : type(t) {}
+};
+\end{lstlisting}
+
+\textbf{编译单元节点：}
+\begin{lstlisting}[language=C++]
+class CompUnitNode : public ASTNode {
+public:
+    std::vector<std::shared_ptr<DeclNode>> decls;        // 全局声明
+    std::vector<std::shared_ptr<FuncDefNode>> funcDefs;  // 函数定义
+
+    CompUnitNode() : ASTNode("CompUnit") {}
+};
+\end{lstlisting}
+
+\textbf{声明节点：}
+\begin{lstlisting}[language=C++]
+class DeclNode : public ASTNode {
+public:
+    bool isConst = false;
+    DeclNode() : ASTNode("Decl") {}
+};
+
+class ConstDeclNode : public DeclNode {
+public:
+    BType bType;
+    std::vector<std::shared_ptr<ConstDefNode>> constDefs;
+    ConstDeclNode() : DeclNode("ConstDecl") { isConst = true; }
+};
+
+class VarDeclNode : public DeclNode {
+public:
+    BType bType;
+    std::vector<std::shared_ptr<VarDefNode>> varDefs;
+    VarDeclNode() : DeclNode("VarDecl") { isConst = false; }
+};
+\end{lstlisting}
+
+\textbf{函数定义节点：}
+\begin{lstlisting}[language=C++]
+class FuncDefNode : public ASTNode {
+public:
+    BType returnType;
+    std::string ident;
+    std::vector<std::shared_ptr<FuncFParamNode>> params;
+    std::shared_ptr<BlockNode> block;
+
+    FuncDefNode() : ASTNode("FuncDef") {}
+};
+\end{lstlisting}
+
+\textbf{表达式节点层次：}
+\begin{lstlisting}[language=C++]
+// 表达式基类
+class ExpNode : public ASTNode {
+public:
+    ExpNode() : ASTNode("Exp") {}
+};
+
+// 加法表达式（左结合）
+class AddExpNode : public ExpNode {
+public:
+    std::shared_ptr<AddExpNode> left;   // 左操作数（可选）
+    BinaryOp op;                        // 运算符 (ADD, SUB)
+    std::shared_ptr<MulExpNode> right;  // 右操作数
+
+    AddExpNode() : ExpNode("AddExp"), op(BinaryOp::ADD) {}
+};
+
+// 乘法表达式（左结合）
+class MulExpNode : public ExpNode {
+public:
+    std::shared_ptr<MulExpNode> left;   // 左操作数（可选）
+    BinaryOp op;                        // 运算符 (MUL, DIV, MOD)
+    std::shared_ptr<UnaryExpNode> right; // 右操作数
+
+    MulExpNode() : ExpNode("MulExp"), op(BinaryOp::MUL) {}
+};
+
+// 一元表达式
+class UnaryExpNode : public ExpNode {
+public:
+    enum class UnaryType {
+        PRIMARY,    // primaryExp
+        FUNC_CALL,  // Ident '(' funcRParams? ')'
+        UNARY_OP    // unaryOp unaryExp
+    };
+
+    UnaryType unaryType;
+    std::shared_ptr<PrimaryExpNode> primaryExp; // PRIMARY
+    std::string funcName;                        // FUNC_CALL
+    std::vector<std::shared_ptr<ExpNode>> args; // FUNC_CALL
+    UnaryOp unaryOp;                            // UNARY_OP
+    std::shared_ptr<UnaryExpNode> unaryExp;     // UNARY_OP
+
+    UnaryExpNode() : ExpNode("UnaryExp"), unaryType(UnaryType::PRIMARY) {}
+};
+
+// 逻辑与表达式（短路求值）
+class LAndExpNode : public ExpNode {
+public:
+    std::shared_ptr<LAndExpNode> left;  // 左操作数（可选）
+    std::shared_ptr<EqExpNode> right;   // 右操作数
+
+    LAndExpNode() : ExpNode("LAndExp") {}
+};
+
+// 逻辑或表达式（短路求值）
+class LOrExpNode : public ExpNode {
+public:
+    std::shared_ptr<LOrExpNode> left;    // 左操作数（可选）
+    std::shared_ptr<LAndExpNode> right; // 右操作数
+
+    LOrExpNode() : ExpNode("LOrExp") {}
+};
+\end{lstlisting}
+
+\textbf{语句节点：}
+\begin{lstlisting}[language=C++]
+enum class StmtType {
+    ASSIGN,     // lVal '=' exp ';'
+    EXP,        // (exp)? ';'
+    BLOCK,      // block
+    IF,         // 'if' '(' cond ')' stmt ('else' stmt)?
+    RETURN      // 'return' (exp)? ';'
+};
+
+class StmtNode : public ASTNode {
+public:
+    StmtType stmtType;
+
+    // ASSIGN类型
+    std::shared_ptr<LValNode> lVal;
+    std::shared_ptr<ExpNode> exp;
+
+    // BLOCK类型
+    std::shared_ptr<BlockNode> block;
+
+    // IF类型
+    std::shared_ptr<CondNode> cond;
+    std::shared_ptr<StmtNode> thenStmt;
+    std::shared_ptr<StmtNode> elseStmt;  // 可选
+
+    // RETURN类型 - 使用exp字段
+
+    StmtNode() : ASTNode("Stmt"), stmtType(StmtType::EXP) {}
+};
+\end{lstlisting}
+
 \subsection{语法树遍历算法伪代码} % 对应源码文档 3.2
 
-\paragraph{访问者模式遍历AST（核心函数）：}
+\paragraph{访问者模式遍历AST：}
 \begin{pseudocode}
+算法: visitCompUnit(node)
+输入: CompUnitNode* node
+输出: 无
+
+BEGIN
+    // 先处理全局声明
+    FOR EACH decl IN node->decls:
+        visitDecl(decl)
+    END FOR
+
+    // 再处理函数定义
+    FOR EACH funcDef IN node->funcDefs:
+        visitFuncDef(funcDef)
+    END FOR
+END
+
+算法: visitDecl(node)
+输入: DeclNode* node
+输出: 无
+
+BEGIN
+    IF node是ConstDeclNode:
+        visitConstDecl(node)
+    ELSE IF node是VarDeclNode:
+        visitVarDecl(node)
+    END IF
+END
+
 算法: visitFuncDef(node)
 输入: FuncDefNode* node
 输出: 无
 
 BEGIN
-    // 创建函数...
-    ...
-    // 进入函数作用域...
-    ...
-    // 处理参数...
-    ...
+    // 创建函数
+    retType = bTypeToLLVMType(node->returnType)
+    paramTypes = []
+    FOR EACH param IN node->params:
+        paramTypes.append(bTypeToLLVMType(param->bType))
+    END FOR
+
+    func = Function::create(FunctionType::get(retType, paramTypes),
+                              node->ident, module)
+
+    // 创建入口基本块
+    entryBB = BasicBlock::create(module, node->ident + "_ENTRY", func)
+    builder->set_insert_point(entryBB)
+
+    // 进入函数作用域
+    symbolTable.enterScope()
+
+    // 处理参数
+    FOR EACH param IN node->params:
+        alloca = createLocalVariable(param->ident, paramType)
+        builder->create_store(arg, alloca)
+        symbolTable.insert(param->ident, alloca, paramType, false)
+    END FOR
+
     // 处理函数体
     visitBlock(node->block)
 
-    // 如果基本块没有终结指令，添加默认返回...
-    ...
+    // 如果基本块没有终结指令，添加默认返回
+    IF currentBB没有终结指令:
+        IF retType是void:
+            builder->create_void_ret()
+        ELSE:
+            builder->create_ret(ConstantInt::get(0, module))
+        END IF
+    END IF
+
     // 退出函数作用域
     symbolTable.exitScope()
 END
@@ -454,7 +1042,9 @@ BEGIN
             val = visitExp(node->exp)             // 计算值
             builder->create_store(val, addr)      // 存储
         CASE EXP:
-            ...
+            IF node->exp存在:
+                visitExp(node->exp)               // 计算表达式（丢弃结果）
+            END IF
         CASE BLOCK:
             visitBlock(node->block)
         CASE IF:
@@ -462,6 +1052,26 @@ BEGIN
         CASE RETURN:
             visitReturnStmt(node)
     END SWITCH
+END
+
+算法: visitExp(node)
+输入: ExpNode* node
+输出: Value* (IR值)
+
+BEGIN
+    IF node是AddExpNode:
+        RETURN visitAddExp(node)
+    ELSE IF node是MulExpNode:
+        RETURN visitMulExp(node)
+    ELSE IF node是UnaryExpNode:
+        RETURN visitUnaryExp(node)
+    ELSE IF node是PrimaryExpNode:
+        RETURN visitPrimaryExp(node)
+    ELSE IF node是LValNode:
+        RETURN visitLVal(node, true)  // 加载值
+    ELSE IF node是NumberNode:
+        RETURN visitNumber(node)
+    END IF
 END
 
 算法: visitAddExp(node)
@@ -474,9 +1084,59 @@ BEGIN
         RETURN visitMulExp(node->right)
     END IF
 
-    // 递归计算左操作数...
-    // 类型提升...
-    // 生成IR指令...
+    // 递归计算左操作数
+    left = visitAddExp(node->left)
+    right = visitMulExp(node->right)
+
+    // 类型提升
+    IF left是float类型 OR right是float类型:
+        IF left是int类型:
+            left = builder->create_sitofp(left, floatType)
+        END IF
+        IF right是int类型:
+            right = builder->create_sitofp(right, floatType)
+        END IF
+    END IF
+
+    // 生成IR指令
+    IF node->op == ADD:
+        IF 是float类型:
+            RETURN builder->create_fadd(left, right)
+        ELSE:
+            RETURN builder->create_iadd(left, right)
+        END IF
+    ELSE IF node->op == SUB:
+        IF 是float类型:
+            RETURN builder->create_fsub(left, right)
+        ELSE:
+            RETURN builder->create_isub(left, right)
+        END IF
+    END IF
+END
+
+算法: visitLVal(node, load)
+输入: LValNode* node, bool load
+输出: Value*
+
+BEGIN
+    info = symbolTable.lookup(node->ident)
+    IF info == nullptr:
+        报错: 未定义的变量
+        RETURN nullptr
+    END IF
+
+    addr = info->value
+
+    IF load == true:
+        IF addr是Argument类型:
+            RETURN addr  // 参数直接返回值
+        END IF
+        // 加载值
+        loadType = addr->get_type()->get_pointer_element_type()
+        RETURN builder->create_load(loadType, addr)
+    ELSE:
+        RETURN addr  // 返回地址
+    END IF
 END
 
 算法: visitIfStmt(node)
@@ -484,17 +1144,49 @@ END
 输出: 无
 
 BEGIN
-    // 创建基本块...
-    // 计算条件...
-    // 条件跳转...
-    // 生成then分支...
-    // 生成else分支...
+    // 创建基本块
+    thenBB = BasicBlock::create(module, "", currentFunction)
+    IF node->elseStmt存在:
+        elseBB = BasicBlock::create(module, "", currentFunction)
+    ELSE:
+        elseBB = nullptr
+    END IF
+    mergeBB = BasicBlock::create(module, "", currentFunction)
+
+    // 计算条件
+    condVal = visitCond(node->cond)
+    condVal = ensureInt1(condVal)  // 转换为i1类型
+
+    // 条件跳转
+    IF elseBB存在:
+        builder->create_cond_br(condVal, thenBB, elseBB)
+    ELSE:
+        builder->create_cond_br(condVal, thenBB, mergeBB)
+    END IF
+
+    // 生成then分支
+    currentBB = thenBB
+    builder->set_insert_point(thenBB)
+    visitStmt(node->thenStmt)
+    IF currentBB没有终结指令:
+        builder->create_br(mergeBB)
+    END IF
+
+    // 生成else分支
+    IF elseBB存在 AND node->elseStmt存在:
+        currentBB = elseBB
+        builder->set_insert_point(elseBB)
+        visitStmt(node->elseStmt)
+        IF currentBB没有终结指令:
+            builder->create_br(mergeBB)
+        END IF
+    END IF
+
     // 设置当前基本块为merge
     currentBB = mergeBB
     builder->set_insert_point(mergeBB)
 END
 \end{pseudocode}
-% 备注：此处仅展示了部分核心伪代码，完整内容已纳入更新后的.tex文件。
 
 \subsection{中间代码生成详细说明} % 对应源码文档 3.3
 
@@ -515,68 +1207,1042 @@ IR生成器采用访问者模式遍历AST并生成LLVM IR：
 \end{itemize}
 
 \subsubsection{LLVM IR指令类型} % 对应源码文档 3.3.2
-本编译器生成的IR指令类型包括：内存和地址指令、算术指令、控制流指令、比较指令、类型转换指令、函数调用指令、Phi指令等。
+
+本编译器生成的IR指令类型包括：
+
+\textbf{1. 终结指令（Terminator Instructions）：}
+\begin{itemize}
+    \item \texttt{ret}: 返回指令
+    \begin{itemize}
+        \item \texttt{ret i32 \%val}: 返回值
+        \item \texttt{ret void}: 无返回值返回
+    \end{itemize}
+    \item \texttt{br}: 跳转指令
+    \begin{itemize}
+        \item \texttt{br label \%bb}: 无条件跳转
+        \item \texttt{br i1 \%cond, label \%if\_true, label \%if\_false}: 条件跳转
+    \end{itemize}
+\end{itemize}
+
+\textbf{2. 二元运算指令（Binary Instructions）：}
+\begin{itemize}
+    \item \textbf{整数运算}：
+    \begin{itemize}
+        \item \texttt{add}: 加法 (\texttt{\%result = add i32 \%a, \%b})
+        \item \texttt{sub}: 减法 (\texttt{\%result = sub i32 \%a, \%b})
+        \item \texttt{mul}: 乘法 (\texttt{\%result = mul i32 \%a, \%b})
+        \item \texttt{sdiv}: 有符号除法 (\texttt{\%result = sdiv i32 \%a, \%b})
+        \item \texttt{srem}: 有符号取模 (\texttt{\%result = srem i32 \%a, \%b})
+    \end{itemize}
+    \item \textbf{浮点运算}：
+    \begin{itemize}
+        \item \texttt{fadd}: 浮点加法 (\texttt{\%result = fadd float \%a, \%b})
+        \item \texttt{fsub}: 浮点减法 (\texttt{\%result = fsub float \%a, \%b})
+        \item \texttt{fmul}: 浮点乘法 (\texttt{\%result = fmul float \%a, \%b})
+        \item \texttt{fdiv}: 浮点除法 (\texttt{\%result = fdiv float \%a, \%b})
+    \end{itemize}
+\end{itemize}
+
+\textbf{3. 内存操作指令（Memory Instructions）：}
+\begin{itemize}
+    \item \texttt{alloca}: 栈分配 (\texttt{\%ptr = alloca i32})
+    \item \texttt{load}: 加载值 (\texttt{\%val = load i32, i32* \%ptr})
+    \item \texttt{store}: 存储值 (\texttt{store i32 \%val, i32* \%ptr})
+\end{itemize}
+
+\textbf{4. 比较指令（Comparison Instructions）：}
+\begin{itemize}
+    \item \textbf{整数比较}（返回i1类型）：
+    \begin{itemize}
+        \item \texttt{icmp eq}: 相等 (\texttt{\%cmp = icmp eq i32 \%a, \%b})
+        \item \texttt{icmp ne}: 不等 (\texttt{\%cmp = icmp ne i32 \%a, \%b})
+        \item \texttt{icmp sgt}: 有符号大于 (\texttt{\%cmp = icmp sgt i32 \%a, \%b})
+        \item \texttt{icmp sge}: 有符号大于等于 (\texttt{\%cmp = icmp sge i32 \%a, \%b})
+        \item \texttt{icmp slt}: 有符号小于 (\texttt{\%cmp = icmp slt i32 \%a, \%b})
+        \item \texttt{icmp sle}: 有符号小于等于 (\texttt{\%cmp = icmp sle i32 \%a, \%b})
+    \end{itemize}
+    \item \textbf{浮点比较}（返回i1类型）：
+    \begin{itemize}
+        \item \texttt{fcmp oeq}: 有序相等 (\texttt{\%cmp = fcmp oeq float \%a, \%b})
+        \item \texttt{fcmp one}: 有序不等 (\texttt{\%cmp = fcmp one float \%a, \%b})
+        \item \texttt{fcmp ogt}: 有序大于 (\texttt{\%cmp = fcmp ogt float \%a, \%b})
+        \item \texttt{fcmp oge}: 有序大于等于 (\texttt{\%cmp = fcmp oge float \%a, \%b})
+        \item \texttt{fcmp olt}: 有序小于 (\texttt{\%cmp = fcmp olt float \%a, \%b})
+        \item \texttt{fcmp ole}: 有序小于等于 (\texttt{\%cmp = fcmp ole float \%a, \%b})
+    \end{itemize}
+\end{itemize}
+
+\textbf{5. 类型转换指令（Conversion Instructions）：}
+\begin{itemize}
+    \item \texttt{zext}: 零扩展 (\texttt{\%ext = zext i1 \%val to i32})
+    \item \texttt{sitofp}: 有符号整数转浮点 (\texttt{\%fp = sitofp i32 \%val to float})
+    \item \texttt{fptosi}: 浮点转有符号整数 (\texttt{\%int = fptosi float \%val to i32})
+\end{itemize}
+
+\textbf{6. 函数调用指令（Call Instruction）：}
+\begin{itemize}
+    \item \texttt{call}: 函数调用 (\texttt{\%result = call i32 @func(i32 \%arg)})
+\end{itemize}
+
+\textbf{7. Phi指令（Phi Instruction）：}
+\begin{itemize}
+    \item \texttt{phi}: SSA形式的Phi节点 (\texttt{\%val = phi i32 [\%a, \%bb1], [\%b, \%bb2]})
+\end{itemize}
 
 \subsubsection{基本块和控制流图（CFG）} % 对应源码文档 3.3.3
+
 \paragraph{基本块（Basic Block）概念：}
 \begin{itemize}
     \item 基本块是最大化的线性指令序列，只有一个入口点和一个出口点
     \item 基本块以终结指令（\texttt{ret}或\texttt{br}）结束
+    \item 基本块之间通过跳转指令连接，形成控制流图（CFG）
 \end{itemize}
 
-\subsubsection{符号表作用域管理} % 对应源码文档 3.3.4
-\begin{itemize}
-    \item 使用作用域栈（Scope Stack）实现嵌套作用域
-    \item 核心操作包括 \texttt{enterScope()}、\texttt{exitScope()}、\texttt{lookup(name)} 和 \texttt{insert(name, info)}
-\end{itemize}
+\paragraph{基本块管理算法：}
+\begin{pseudocode}
+算法: 创建基本块
+输入: 函数Function* func, 基本块名称string name
+输出: BasicBlock*
+
+BEGIN
+    bb = BasicBlock::create(module, name, func)
+    func->add_basic_block(bb)
+    RETURN bb
+END
+
+算法: 设置当前基本块
+输入: BasicBlock* bb
+输出: 无
+
+BEGIN
+    currentBB = bb
+    builder->set_insert_point(bb)  // 设置IRBuilder的插入点
+END
+\end{pseudocode}
+
+\paragraph{控制流处理示例（if语句）：}
+\begin{verbatim}
+IF语句的CFG结构:
+    entryBB (入口基本块)
+        |
+        | (条件跳转)
+        v
+    +-------+-------+
+    |               |
+    v               v
+thenBB          elseBB (可选)
+    |               |
+    +-------+-------+
+            |
+            v
+        mergeBB (合并基本块)
+\end{verbatim}
+
+\subsubsection{符号表和作用域管理} % 对应源码文档 3.3.4
+
+\paragraph{符号表结构：}
+\begin{verbatim}
+SymbolTable
+├── scopes: vector<Scope*>  // 作用域栈
+│   └── Scope
+│       └── symbols: map<string, SymbolInfo>
+│           └── SymbolInfo
+│               ├── value: Value*      // IR中的Value指针
+│               ├── type: Type*        // 类型
+│               ├── isConst: bool      // 是否为常量
+│               └── isGlobal: bool     // 是否为全局变量
+\end{verbatim}
+
+\paragraph{作用域管理算法：}
+\begin{pseudocode}
+算法: enterScope()
+输出: 无
+
+BEGIN
+    scopes.push_back(make_shared<Scope>())
+END
+
+算法: exitScope()
+输出: 无
+
+BEGIN
+    IF scopes.size() > 1:  // 保留全局作用域
+        scopes.pop_back()
+    END IF
+END
+
+算法: lookup(name)
+输入: string name
+输出: SymbolInfo*
+
+BEGIN
+    // 从内层作用域向外查找
+    FOR i = scopes.size() - 1 TO 0:
+        info = scopes[i]->lookup(name)
+        IF info != nullptr:
+            RETURN info
+        END IF
+    END FOR
+    RETURN nullptr
+END
+
+算法: insert(name, value, type, isConst)
+输入: string name, Value* value, Type* type, bool isConst
+输出: bool (成功返回true)
+
+BEGIN
+    IF scopes.empty():
+        RETURN false
+    END IF
+
+    info = SymbolInfo(value, type, isConst, isGlobalScope())
+    RETURN scopes.back()->insert(name, info)
+END
+\end{pseudocode}
 
 \subsubsection{全局变量和局部变量处理} % 对应源码文档 3.3.5
-\begin{itemize}
-    \item 全局变量使用 \texttt{GlobalVariable::create}
-    \item 局部变量使用 \texttt{builder->create\_alloca} 在栈上分配空间，遵循 \texttt{alloca/store/load} 模式
-\end{itemize}
+
+\paragraph{全局变量生成：}
+\begin{pseudocode}
+算法: visitConstDef (全局常量)
+输入: ConstDefNode* node, BType bType
+输出: 无
+
+BEGIN
+    IF symbolTable.isGlobalScope():
+        type = bTypeToLLVMType(bType)
+
+        // 计算常量初始值
+        IF bType == INT:
+            initVal = evalConstInt(node->initVal)
+            init = ConstantInt::get(initVal, module)
+        ELSE:
+            initVal = evalConstFloat(node->initVal)
+            init = ConstantFP::get(initVal, module)
+        END IF
+
+        // 创建全局变量
+        gv = GlobalVariable::create(node->ident, module, type, true, init)
+        symbolTable.insert(node->ident, gv, type, true)
+    END IF
+END
+\end{pseudocode}
+
+\paragraph{局部变量生成（SSA形式）：}
+\begin{pseudocode}
+算法: visitVarDef (局部变量)
+输入: VarDefNode* node, BType bType
+输出: 无
+
+BEGIN
+    IF NOT symbolTable.isGlobalScope():
+        type = bTypeToLLVMType(bType)
+
+        // 创建alloca指令（在栈上分配空间）
+        alloca = builder->create_alloca(type)
+
+        // 如果有初始化值
+        IF node->initVal存在:
+            initVal = visitExp(node->initVal)
+            builder->create_store(initVal, alloca)
+        END IF
+
+        symbolTable.insert(node->ident, alloca, type, false)
+    END IF
+END
+\end{pseudocode}
+
+\paragraph{变量访问：}
+\begin{pseudocode}
+算法: visitLVal(node, load)
+输入: LValNode* node, bool load
+输出: Value*
+
+BEGIN
+    info = symbolTable.lookup(node->ident)
+    IF info == nullptr:
+        报错: 未定义的变量
+        RETURN nullptr
+    END IF
+
+    addr = info->value
+
+    IF load == true:
+        // 需要加载值
+        IF addr是Argument类型:
+            RETURN addr  // 函数参数直接返回值
+        ELSE:
+            // 生成load指令
+            loadType = addr->get_type()->get_pointer_element_type()
+            RETURN builder->create_load(loadType, addr)
+        END IF
+    ELSE:
+        // 需要地址（用于赋值）
+        RETURN addr
+    END IF
+END
+\end{pseudocode}
 
 \subsubsection{函数定义和调用} % 对应源码文档 3.3.6
-\begin{itemize}
-    \item 根据返回值和参数类型构建 \texttt{FunctionType}，使用 \texttt{Function::create} 创建函数
-    \item 调用使用 \texttt{builder->create\_call} 生成 \texttt{call} 指令
-\end{itemize}
+
+\paragraph{函数定义生成：}
+\begin{pseudocode}
+算法: visitFuncDef(node)
+输入: FuncDefNode* node
+输出: 无
+
+BEGIN
+    // 1. 构建函数类型
+    retType = bTypeToLLVMType(node->returnType)
+    paramTypes = []
+    FOR EACH param IN node->params:
+        paramTypes.append(bTypeToLLVMType(param->bType))
+    END FOR
+
+    funcType = FunctionType::get(retType, paramTypes)
+
+    // 2. 创建函数
+    func = Function::create(funcType, node->ident, module)
+    currentFunction = func
+    builder->set_curFunc(func)
+
+    // 3. 创建入口基本块
+    entryBB = BasicBlock::create(module, node->ident + "_ENTRY", func)
+    currentBB = entryBB
+    builder->set_insert_point(entryBB)
+
+    // 4. 进入函数作用域
+    symbolTable.enterScope()
+
+    // 5. 处理参数（为每个参数创建alloca并存储）
+    argIt = func->arg_begin()
+    FOR EACH param IN node->params:
+        paramType = bTypeToLLVMType(param->bType)
+        alloca = createLocalVariable(param->ident, paramType)
+        builder->create_store(*argIt, alloca)
+        symbolTable.insert(param->ident, alloca, paramType, false)
+        argIt++
+    END FOR
+
+    // 6. 处理函数体
+    visitBlock(node->block)
+
+    // 7. 如果基本块没有终结指令，添加默认返回
+    IF currentBB没有终结指令:
+        IF retType是void:
+            builder->create_void_ret()
+        ELSE:
+            builder->create_ret(ConstantInt::get(0, module))
+        END IF
+    END IF
+
+    // 8. 退出函数作用域
+    symbolTable.exitScope()
+    currentFunction = nullptr
+END
+\end{pseudocode}
+
+\paragraph{函数调用生成：}
+\begin{pseudocode}
+算法: visitUnaryExp (函数调用)
+输入: UnaryExpNode* node (unaryType == FUNC_CALL)
+输出: Value*
+
+BEGIN
+    // 1. 查找函数
+    funcVal = symbolTable.getValue(node->funcName)
+    IF funcVal == nullptr:
+        报错: 未定义的函数
+        RETURN nullptr
+    END IF
+
+    // 2. 准备参数
+    args = []
+    FOR EACH arg IN node->args:
+        argVal = visitExp(arg)
+        args.append(argVal)
+    END FOR
+
+    // 3. 创建调用指令
+    RETURN builder->create_call(funcVal, args)
+END
+\end{pseudocode}
 
 \subsubsection{类型系统和类型提升} % 对应源码文档 3.3.7
+
+\paragraph{类型映射：}
+\begin{verbatim}
+BType -> LLVM Type:
+    INT -> i32 (32位有符号整数)
+    FLOAT -> float (32位浮点数)
+    VOID -> void (无类型)
+\end{verbatim}
+
+\paragraph{类型提升规则：}
+\begin{pseudocode}
+算法: 类型提升（二元运算）
+输入: Value* left, Value* right
+输出: Value* left, Value* right (提升后的值)
+
+BEGIN
+    isFloat = left->get_type()->is_float_type() OR
+              right->get_type()->is_float_type()
+
+    IF isFloat:
+        IF left是int32类型:
+            left = builder->create_sitofp(left, floatType)
+        END IF
+        IF right是int32类型:
+            right = builder->create_sitofp(right, floatType)
+        END IF
+    END IF
+
+    RETURN left, right
+END
+\end{pseudocode}
+
+\paragraph{类型转换指令生成：}
 \begin{itemize}
-    \item 类型映射：\texttt{INT} $\rightarrow$ \texttt{i32}；\texttt{FLOAT} $\rightarrow$ \texttt{float}；\texttt{VOID} $\rightarrow$ \texttt{void}
-    \item 类型提升：二元运算中，存在 \texttt{float} 类型则提升为 \texttt{float}（使用 \texttt{sitofp}）
+    \item \texttt{sitofp}: 整数转浮点（用于混合类型运算）
+    \item \texttt{fptosi}: 浮点转整数（用于赋值给整数变量）
+    \item \texttt{zext}: 零扩展（i1转i32，用于条件判断）
 \end{itemize}
 
 \subsubsection{常量折叠优化} % 对应源码文档 3.3.8
+
+\paragraph{常量求值算法：}
+\begin{pseudocode}
+算法: evalConstInt(node)
+输入: ExpNode* node
+输出: int
+
+BEGIN
+    IF node是NumberNode:
+        RETURN node->intVal
+
+    ELSE IF node是AddExpNode:
+        IF node->left == nullptr:
+            RETURN evalConstInt(node->right)
+        ELSE:
+            left = evalConstInt(node->left)
+            right = evalConstInt(node->right)
+            IF node->op == ADD:
+                RETURN left + right
+            ELSE IF node->op == SUB:
+                RETURN left - right
+            END IF
+        END IF
+
+    ELSE IF node是MulExpNode:
+        IF node->left == nullptr:
+            RETURN evalConstInt(node->right)
+        ELSE:
+            left = evalConstInt(node->left)
+            right = evalConstInt(node->right)
+            IF node->op == MUL:
+                RETURN left * right
+            ELSE IF node->op == DIV:
+                RETURN left / right
+            ELSE IF node->op == MOD:
+                RETURN left % right
+            END IF
+        END IF
+
+    ELSE IF node是UnaryExpNode:
+        IF node->unaryType == PRIMARY:
+            RETURN evalConstInt(node->primaryExp)
+        ELSE IF node->unaryType == UNARY_OP:
+            val = evalConstInt(node->unaryExp)
+            IF node->unaryOp == PLUS:
+                RETURN val
+            ELSE IF node->unaryOp == MINUS:
+                RETURN -val
+            ELSE IF node->unaryOp == NOT:
+                RETURN (val == 0 ? 1 : 0)
+            END IF
+        END IF
+
+    ELSE IF node是PrimaryExpNode:
+        IF node->primaryType == NUMBER:
+            RETURN node->number->intVal
+        ELSE IF node->primaryType == PAREN_EXP:
+            RETURN evalConstInt(node->exp)
+        END IF
+
+    RETURN 0
+END
+\end{pseudocode}
+
+\paragraph{常量折叠应用：}
 \begin{itemize}
-    \item 实现了 \texttt{evalConstInt} 等函数，在编译期计算常量表达式的值
-    \item 用于初始化全局变量和优化 \texttt{const} 变量的访问
+    \item 全局变量初始化时，如果初始值是常量表达式，直接计算并生成常量
+    \item 避免生成不必要的运行时计算指令
 \end{itemize}
 
-\subsubsection{短路求值（逻辑与/或）} % 对应源码文档 3.3.9
-\begin{itemize}
-    \item 逻辑运算符 (\texttt{\&\&}, \texttt{||}) 通过条件跳转 (\texttt{cond\_br}) 实现短路，并在分支汇合处使用 \texttt{Phi} 节点合并结果。
-\end{itemize}
+\subsubsection{短路求值实现} % 对应源码文档 3.3.9
+
+\paragraph{逻辑与（\&\&）短路求值：}
+\begin{pseudocode}
+算法: visitLAndExp(node)
+输入: LAndExpNode* node
+输出: Value* (i1类型)
+
+BEGIN
+    IF node->left == nullptr:
+        // 只有右操作数
+        RETURN visitEqExp(node->right)
+    END IF
+
+    // 创建基本块
+    rhsBB = BasicBlock::create(module, "", currentFunction)
+    mergeBB = BasicBlock::create(module, "", currentFunction)
+
+    // 计算左操作数
+    leftVal = visitLAndExp(node->left)
+    leftVal = ensureInt1(leftVal)  // 转换为i1类型
+    leftBB = currentBB
+
+    // 短路：左边为真则计算右边，否则跳到merge（整体为假）
+    builder->create_cond_br(leftVal, rhsBB, mergeBB)
+
+    // 计算右操作数
+    currentBB = rhsBB
+    builder->set_insert_point(rhsBB)
+    rightVal = visitEqExp(node->right)
+    rightVal = ensureInt1(rightVal)
+    builder->create_br(mergeBB)
+    rightEndBB = currentBB
+
+    // merge基本块
+    currentBB = mergeBB
+    builder->set_insert_point(mergeBB)
+
+    // 创建phi节点：左边为假则整体为假，否则等于右边
+    phi = PhiInst::create_phi(module->get_int1_type(), mergeBB)
+    phi->add_phi_pair_operand(ConstantInt::get(false, module), leftBB)
+    phi->add_phi_pair_operand(rightVal, rightEndBB)
+
+    RETURN phi
+END
+\end{pseudocode}
+
+\paragraph{逻辑或（||）短路求值：}
+\begin{pseudocode}
+算法: visitLOrExp(node)
+输入: LOrExpNode* node
+输出: Value* (i1类型)
+
+BEGIN
+    IF node->left == nullptr:
+        RETURN visitLAndExp(node->right)
+    END IF
+
+    // 创建基本块
+    rhsBB = BasicBlock::create(module, "", currentFunction)
+    mergeBB = BasicBlock::create(module, "", currentFunction)
+
+    // 计算左操作数
+    leftVal = visitLOrExp(node->left)
+    leftVal = ensureInt1(leftVal)
+    leftBB = currentBB
+
+    // 短路：左边为真则跳到merge（整体为真），否则计算右边
+    builder->create_cond_br(leftVal, mergeBB, rhsBB)
+
+    // 计算右操作数
+    currentBB = rhsBB
+    builder->set_insert_point(rhsBB)
+    rightVal = visitLAndExp(node->right)
+    rightVal = ensureInt1(rightVal)
+    builder->create_br(mergeBB)
+    rightEndBB = currentBB
+
+    // merge基本块
+    currentBB = mergeBB
+    builder->set_insert_point(mergeBB)
+
+    // 创建phi节点：左边为真则整体为真，否则等于右边
+    phi = PhiInst::create_phi(module->get_int1_type(), mergeBB)
+    phi->add_phi_pair_operand(ConstantInt::get(true, module), leftBB)
+    phi->add_phi_pair_operand(rightVal, rightEndBB)
+
+    RETURN phi
+END
+\end{pseudocode}
 
 \subsubsection{Phi节点和SSA形式} % 对应源码文档 3.3.10
+
+\paragraph{Phi节点的作用：}
 \begin{itemize}
-    \item \texttt{Phi} 节点用于在多个控制流路径汇合时，合并不同路径的值，以支持 SSA（Static Single Assignment）形式。
+    \item Phi节点用于SSA（Static Single Assignment）形式
+    \item 当多个控制流路径汇合时，使用Phi节点合并不同路径的值
+    \item 格式：\texttt{\%val = phi i32 [\%a, \%bb1], [\%b, \%bb2]}
+    \begin{itemize}
+        \item 如果从\texttt{\%bb1}到达，值为\texttt{\%a}
+        \item 如果从\texttt{\%bb2}到达，值为\texttt{\%b}
+    \end{itemize}
 \end{itemize}
 
-\subsubsection{设计思想总结} % 对应源码文档 3.3.13
-核心设计原则包括：访问者模式、SSA形式、基本块管理、符号表作用域、类型系统、常量折叠、短路求值、错误处理。
+\paragraph{Phi节点生成示例（短路求值）：}
 \begin{verbatim}
-IR生成示例：
+; 逻辑与的CFG
+entry:
+    %left = icmp ne i32 %x, 0
+    br i1 %left, label %rhs, label %merge
+
+rhs:
+    %right = icmp ne i32 %y, 0
+    br label %merge
+
+merge:
+    %result = phi i1 [false, %entry], [%right, %rhs]
+    ; 如果从entry到达（left为false），result为false
+    ; 如果从rhs到达（left为true），result为right的值
+\end{verbatim}
+
+\subsubsection{IR生成完整流程} % 对应源码文档 3.3.11
+
+\paragraph{主生成流程：}
+\begin{pseudocode}
+算法: generate(ast)
+输入: CompUnitNode* ast
+输出: 无
+
+BEGIN
+    // 1. 声明运行时库函数
+    declareRuntimeFunctions()
+
+    // 2. 遍历AST，生成IR
+    visitCompUnit(ast)
+
+    // 3. 设置打印名称（为所有Value分配名称）
+    module->set_print_name()
+END
+
+算法: visitCompUnit(node)
+输入: CompUnitNode* node
+输出: 无
+
+BEGIN
+    // 先处理全局声明（全局变量和常量）
+    FOR EACH decl IN node->decls:
+        visitDecl(decl)
+    END FOR
+
+    // 再处理函数定义
+    FOR EACH funcDef IN node->funcDefs:
+        visitFuncDef(funcDef)
+    END FOR
+END
+\end{pseudocode}
+
+\paragraph{运行时库函数声明：}
+\begin{lstlisting}[language=C++]
+void IRGenerator::declareRuntimeFunctions() {
+    std::vector<Type*> emptyParams;
+    std::vector<Type*> intParam = {module->get_int32_type()};
+    std::vector<Type*> intPtrParam = {module->get_int32_ptr_type()};
+    std::vector<Type*> putArrayParams = {
+        module->get_int32_type(),
+        module->get_int32_ptr_type()
+    };
+
+    // int getint()
+    FunctionType* getintType = FunctionType::get(
+        module->get_int32_type(), emptyParams);
+    Function::create(getintType, "getint", module);
+
+    // int getch()
+    FunctionType* getchType = FunctionType::get(
+        module->get_int32_type(), emptyParams);
+    Function::create(getchType, "getch", module);
+
+    // int getarray(int*)
+    FunctionType* getarrayType = FunctionType::get(
+        module->get_int32_type(), intPtrParam);
+    Function::create(getarrayType, "getarray", module);
+
+    // void putint(int)
+    FunctionType* putintType = FunctionType::get(
+        module->get_void_type(), intParam);
+    Function::create(putintType, "putint", module);
+
+    // void putch(int)
+    FunctionType* putchType = FunctionType::get(
+        module->get_void_type(), intParam);
+    Function::create(putchType, "putch", module);
+
+    // void putarray(int, int*)
+    FunctionType* putarrayType = FunctionType::get(
+        module->get_void_type(), putArrayParams);
+    Function::create(putarrayType, "putarray", module);
+
+    // void starttime()
+    FunctionType* starttimeType = FunctionType::get(
+        module->get_void_type(), emptyParams);
+    Function::create(starttimeType, "starttime", module);
+
+    // void stoptime()
+    FunctionType* stoptimeType = FunctionType::get(
+        module->get_void_type(), emptyParams);
+    Function::create(stoptimeType, "stoptime", module);
+}
+\end{lstlisting}
+
+\paragraph{运行时库函数说明：}
+\begin{itemize}
+    \item \texttt{getint()}: 从标准输入读取一个整数
+    \item \texttt{getch()}: 从标准输入读取一个字符
+    \item \texttt{getarray(int*)}: 从标准输入读取一个整数数组
+    \item \texttt{putint(int)}: 向标准输出写入一个整数
+    \item \texttt{putch(int)}: 向标准输出写入一个字符
+    \item \texttt{putarray(int, int*)}: 向标准输出写入一个整数数组
+    \item \texttt{starttime()}: 开始计时
+    \item \texttt{stoptime()}: 停止计时
+\end{itemize}
+
+\subsubsection{IR生成示例} % 对应源码文档 3.3.12
+
+\paragraph{输入源代码：}
+\begin{lstlisting}[language=C]
+int a = 10;
+
+int main() {
+    int b = 20;
+    if (a > 5) {
+        b = a + 10;
+    }
+    return b;
+}
+\end{lstlisting}
+
+\paragraph{生成的LLVM IR：}
+\begin{verbatim}
 @a = global i32 10
-...
+
 define i32 @main() {
 entry:
-  %a = alloca i32
-  store i32 10, i32* %a
-  ...
-  ret i32 0
+    %0 = alloca i32
+    %1 = alloca i32
+    store i32 20, i32* %1
+    %2 = load i32, i32* @a
+    %3 = icmp sgt i32 %2, 5
+    br i1 %3, label %then, label %merge
+
+then:
+    %4 = load i32, i32* @a
+    %5 = add i32 %4, 10
+    store i32 %5, i32* %1
+    br label %merge
+
+merge:
+    %6 = load i32, i32* %1
+    ret i32 %6
 }
 \end{verbatim}
+
+\paragraph{IR说明：}
+\begin{enumerate}
+    \item \texttt{@a = global i32 10}: 全局变量定义
+    \item \texttt{\%0 = alloca i32}: 为局部变量分配栈空间（未使用）
+    \item \texttt{\%1 = alloca i32}: 为变量\texttt{b}分配栈空间
+    \item \texttt{store i32 20, i32* \%1}: 初始化\texttt{b = 20}
+    \item \texttt{\%2 = load i32, i32* @a}: 加载全局变量\texttt{a}
+    \item \texttt{\%3 = icmp sgt i32 \%2, 5}: 比较\texttt{a > 5}
+    \item \texttt{br i1 \%3, label \%then, label \%merge}: 条件跳转
+    \item \texttt{then}基本块：计算\texttt{b = a + 10}
+    \item \texttt{merge}基本块：加载\texttt{b}并返回
+\end{enumerate}
+
+\subsubsection{代码实现细节} % 对应源码文档 3.3.13
+
+\paragraph{IRGenerator类核心成员：}
+\begin{lstlisting}[language=C++]
+class IRGenerator {
+private:
+    Module* module;              // 当前模块
+    IRBuilder* builder;          // IR构建器
+    SymbolTable symbolTable;     // 符号表
+    Function* currentFunction;   // 当前函数
+    BasicBlock* currentBB;       // 当前基本块
+
+    // 临时存储常量值（用于常量折叠）
+    int tmpIntVal;
+    float tmpFloatVal;
+    bool tmpIsFloat;
+    bool isConstExpr;
+
+    // 用于短路求值的基本块
+    BasicBlock* trueBB;
+    BasicBlock* falseBB;
+};
+\end{lstlisting}
+
+\paragraph{构造函数和初始化：}
+\begin{lstlisting}[language=C++]
+IRGenerator::IRGenerator(const std::string& sourceFileName);
+\end{lstlisting}
+
+\textbf{功能说明：}创建IR模块和IRBuilder，初始化成员变量，声明运行时库函数。
+
+\paragraph{类型转换辅助函数：}
+\begin{lstlisting}[language=C++]
+Type* IRGenerator::bTypeToLLVMType(BType bType);  // BType转换为LLVM Type
+Value* IRGenerator::ensureInt1(Value* val);       // 确保值为i1类型（布尔值）
+\end{lstlisting}
+
+\textbf{功能说明：}
+\begin{itemize}
+    \item \texttt{bTypeToLLVMType()}: 将BType（INT/FLOAT/VOID）映射到对应的LLVM类型（i32/float/void）
+    \item \texttt{ensureInt1()}: 如果值是i32类型，则与0比较转换为i1类型；如果已经是i1类型则直接返回
+\end{itemize}
+
+\paragraph{常量求值：}
+\begin{lstlisting}[language=C++]
+int IRGenerator::evalConstInt(std::shared_ptr<ExpNode> node);
+\end{lstlisting}
+
+\textbf{功能说明：}递归计算常量表达式的整数值，支持数字字面量、加法表达式、乘法表达式和一元表达式。用于常量折叠优化。
+
+\paragraph{表达式访问（类型提升）：}
+\begin{lstlisting}[language=C++]
+Value* IRGenerator::visitAddExp(std::shared_ptr<AddExpNode> node);
+\end{lstlisting}
+
+\textbf{功能说明：}访问加法表达式节点，递归处理左操作数，处理类型提升（如果有一个操作数是float，则将int转换为float），生成对应的IR指令（fadd/iadd或fsub/isub）。
+
+\paragraph{左值访问（加载/地址）：}
+\begin{lstlisting}[language=C++]
+Value* IRGenerator::visitLVal(std::shared_ptr<LValNode> node, bool load);
+\end{lstlisting}
+
+\textbf{功能说明：}访问左值节点。如果\texttt{load=true}，则从符号表查找变量并生成load指令加载值（函数参数直接返回值）；如果\texttt{load=false}，则返回变量的地址（用于赋值）。
+
+\paragraph{if语句实现（控制流）：}
+\begin{lstlisting}[language=C++]
+void IRGenerator::visitIfStmt(std::shared_ptr<StmtNode> node);
+\end{lstlisting}
+
+\textbf{功能说明：}生成if语句的IR。创建thenBB、elseBB（如果存在）和mergeBB基本块，计算条件值并生成条件跳转，分别生成then和else分支的IR，最后设置当前基本块为mergeBB。
+
+\subsubsection{设计思想总结} % 对应源码文档 3.3.14
+
+\paragraph{核心设计原则：}
+\begin{enumerate}
+    \item \textbf{访问者模式}：为每种AST节点类型定义专门的访问函数，实现关注点分离
+    \item \textbf{SSA形式}：使用alloca/store/load模式实现局部变量，符合LLVM IR的SSA要求
+    \item \textbf{基本块管理}：每个函数有入口基本块，控制流语句创建新基本块，使用Phi节点合并控制流
+    \item \textbf{符号表作用域}：使用作用域栈管理变量可见性，支持嵌套作用域
+    \item \textbf{类型系统}：统一的类型映射和类型提升规则，确保类型安全
+    \item \textbf{常量折叠}：编译时计算常量表达式，减少运行时开销
+    \item \textbf{短路求值}：逻辑运算符使用控制流实现短路，提高效率
+    \item \textbf{错误处理}：在IR生成过程中检查未定义变量、类型不匹配等错误
+\end{enumerate}
+
+\paragraph{IR生成示例：}
+
+输入AST：
+\begin{verbatim}
+CompUnit
+├── VarDecl (int a = 10)
+└── FuncDef (int main() { return 0; })
+\end{verbatim}
+
+生成的LLVM IR：
+\begin{verbatim}
+@a = global i32 10
+
+define i32 @main() {
+entry:
+    ret i32 0
+}
+\end{verbatim}
+
+\subsection{符号表实现细节} % 对应源码文档 3.4
+
+\subsubsection{符号表数据结构} % 对应源码文档 3.4.1
+
+\paragraph{SymbolInfo结构：}
+\begin{lstlisting}[language=C++]
+struct SymbolInfo {
+    Value* value;           // IR中的Value指针
+    Type* type;            // 类型
+    bool isConst;           // 是否为常量
+    bool isGlobal;          // 是否为全局变量
+
+    SymbolInfo() : value(nullptr), type(nullptr),
+                   isConst(false), isGlobal(false) {}
+    SymbolInfo(Value* v, Type* t, bool c, bool g)
+        : value(v), type(t), isConst(c), isGlobal(g) {}
+};
+\end{lstlisting}
+
+\paragraph{Scope类实现：}
+\begin{lstlisting}[language=C++]
+class Scope {
+public:
+    std::map<std::string, SymbolInfo> symbols;
+
+    SymbolInfo* lookup(const std::string& name);  // 在当前作用域中查找符号
+    bool insert(const std::string& name, const SymbolInfo& info);  // 在当前作用域中插入符号
+};
+\end{lstlisting}
+
+\textbf{功能说明：}
+\begin{itemize}
+    \item \texttt{lookup()}: 在当前作用域中查找符号，找到返回SymbolInfo指针，否则返回nullptr
+    \item \texttt{insert()}: 在当前作用域中插入符号，如果符号已存在则返回false（重复定义），否则返回true
+\end{itemize}
+
+\paragraph{SymbolTable类实现：}
+\begin{lstlisting}[language=C++]
+class SymbolTable {
+private:
+    std::vector<std::shared_ptr<Scope>> scopes;  // 作用域栈
+
+public:
+    SymbolTable();  // 构造函数，创建全局作用域
+    void enterScope();  // 进入新的作用域
+    void exitScope();  // 退出当前作用域（保留全局作用域）
+    bool isGlobalScope() const;  // 判断当前是否在全局作用域
+    SymbolInfo* lookup(const std::string& name);  // 从内层作用域向外查找符号
+    bool insert(const std::string& name, Value* value, Type* type, bool isConst);  // 在当前作用域中插入符号
+};
+\end{lstlisting}
+
+\textbf{功能说明：}
+\begin{itemize}
+    \item \texttt{enterScope()}: 创建新的作用域并压入作用域栈
+    \item \texttt{exitScope()}: 弹出当前作用域（但保留全局作用域）
+    \item \texttt{isGlobalScope()}: 判断当前作用域栈大小是否为1（即全局作用域）
+    \item \texttt{lookup()}: 从内层作用域向外层查找符号，实现作用域嵌套查找
+    \item \texttt{insert()}: 在当前作用域（栈顶）中插入符号
+\end{itemize}
+
+\subsection{IRBuilder实现细节} % 对应源码文档 3.5
+
+\subsubsection{IRBuilder核心接口} % 对应源码文档 3.5.1
+
+\paragraph{IRBuilder类结构：}
+\begin{lstlisting}[language=C++]
+class IRBuilder {
+private:
+    BasicBlock *BB_;        // 当前基本块
+    Module *m_;            // 模块
+    Function *curfunc;     // 当前函数
+
+public:
+    IRBuilder(BasicBlock *bb, Module *m);
+
+    // 设置插入点
+    void set_insert_point(BasicBlock *bb);
+
+    // 整数运算指令
+    BinaryInst* create_iadd(Value *lhs, Value *rhs);
+    BinaryInst* create_isub(Value *lhs, Value *rhs);
+    BinaryInst* create_imul(Value *lhs, Value *rhs);
+    BinaryInst* create_isdiv(Value *lhs, Value *rhs);
+
+    // 浮点运算指令
+    BinaryInst* create_fadd(Value *lhs, Value *rhs);
+    BinaryInst* create_fsub(Value *lhs, Value *rhs);
+    BinaryInst* create_fmul(Value *lhs, Value *rhs);
+    BinaryInst* create_fdiv(Value *lhs, Value *rhs);
+
+    // 比较指令
+    CmpInst* create_icmp_eq(Value *lhs, Value *rhs);
+    CmpInst* create_icmp_ne(Value *lhs, Value *rhs);
+    CmpInst* create_icmp_sgt(Value *lhs, Value *rhs);
+    CmpInst* create_icmp_sge(Value *lhs, Value *rhs);
+    CmpInst* create_icmp_slt(Value *lhs, Value *rhs);
+    CmpInst* create_icmp_sle(Value *lhs, Value *rhs);
+    CmpInst* create_fcmp_oeq(Value *lhs, Value *rhs);
+    CmpInst* create_fcmp_ogt(Value *lhs, Value *rhs);
+    // ... 其他比较指令
+
+    // 内存操作指令
+    AllocaInst* create_alloca(Type *ty);
+    LoadInst* create_load(Type *ty, Value *ptr);
+    StoreInst* create_store(Value *val, Value *ptr);
+
+    // 控制流指令
+    BranchInst* create_br(BasicBlock *if_true);
+    BranchInst* create_cond_br(Value *cond, BasicBlock *if_true, BasicBlock *if_false);
+    ReturnInst* create_ret(Value *val);
+    ReturnInst* create_void_ret();
+
+    // 类型转换指令
+    ZextInst* create_zext(Value *val, Type *ty);
+    SiToFpInst* create_sitofp(Value *val, Type *ty);
+    FpToSiInst* create_fptosi(Value *val, Type *ty);
+
+    // 函数调用指令
+    CallInst* create_call(Value *func, std::vector<Value *> args);
+};
+\end{lstlisting}
+
+\textbf{功能说明：}
+IRBuilder提供创建各种LLVM IR指令的便捷接口，所有方法都在当前基本块（BB\_）中创建指令：
+\begin{itemize}
+    \item \textbf{整数运算}：\texttt{create\_iadd}, \texttt{create\_isub}, \texttt{create\_imul}, \texttt{create\_isdiv}等
+    \item \textbf{浮点运算}：\texttt{create\_fadd}, \texttt{create\_fsub}, \texttt{create\_fmul}, \texttt{create\_fdiv}等
+    \item \textbf{比较指令}：\texttt{create\_icmp\_*}（整数比较），\texttt{create\_fcmp\_*}（浮点比较）
+    \item \textbf{内存操作}：\texttt{create\_alloca}（栈分配），\texttt{create\_load}（加载），\texttt{create\_store}（存储）
+    \item \textbf{控制流}：\texttt{create\_br}（无条件跳转），\texttt{create\_cond\_br}（条件跳转），\texttt{create\_ret}（返回）
+    \item \textbf{类型转换}：\texttt{create\_zext}（零扩展），\texttt{create\_sitofp}（整数转浮点），\texttt{create\_fptosi}（浮点转整数）
+    \item \textbf{函数调用}：\texttt{create\_call}（函数调用）
+\end{itemize}
+
+\subsection{源程序编译步骤（完整流程）} % 对应源码文档 3.6
+
+\paragraph{完整编译流程：}
+
+\begin{enumerate}
+    \item \textbf{词法分析}：
+    \begin{lstlisting}[language=C++]
+SLRLexer lexer;
+auto tokens = lexer.analyze(sourceCode);
+    \end{lstlisting}
+
+    \item \textbf{语法分析}：
+    \begin{lstlisting}[language=C++]
+SLRParser parser;
+bool success = parser.parse(tokens);
+auto ast = parser.getAST();
+    \end{lstlisting}
+
+    \item \textbf{IR生成}：
+    \begin{lstlisting}[language=C++]
+IRGenerator generator("source.sy");
+generator.generate(ast);
+std::string ir = generator.print();
+    \end{lstlisting}
+\end{enumerate}
+
+\paragraph{命令行使用：}
+\begin{verbatim}
+./compiler -i source.sy    # 完整编译（生成LLVM IR）
+\end{verbatim}
+
+\section{总结}
+
+本编译器实现了完整的编译流程：
+\begin{enumerate}
+    \item \textbf{词法分析}：将源代码转换为Token序列
+    \item \textbf{语法分析}：将Token序列解析为AST
+    \item \textbf{IR生成}：遍历AST生成LLVM IR中间代码
+\end{enumerate}
+
+\paragraph{关键特性：}
+\begin{itemize}
+    \item 支持两种词法分析器（DFA状态机、NFA→DFA）
+    \item 支持两种语法分析器（递归下降、SLR）
+    \item 完整的AST节点体系
+    \item 符号表作用域管理
+    \item 类型系统和类型提升
+    \item 常量折叠优化
+    \item 短路求值
+    \item 控制流图生成
+\end{itemize}
 
 \end{document}

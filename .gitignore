@@ -47,7 +47,4 @@
 testcase/*.ll
 testcase/*.tok
 
-latex/*
-!latex/logo.png
-!latex/personal_info.tex
-!latex/template.tex
+latex/*.pdf
