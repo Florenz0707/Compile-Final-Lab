@@ -8,24 +8,31 @@
 
 % --- 字体与语言设置 (核心) ---
 \usepackage{fontspec} % 允许使用系统字体
-% 使用ctex包，并设置默认字体为FangSong以避免重复定义警告
-% 注意：如果不想看到警告，可以保持默认的SimSun，但需要确保FangSong的斜体形状已定义
-\usepackage{ctex}
 
 % 配置verbatim环境使用支持Unicode的等宽字体
 % 设置等宽字体为支持Unicode的字体（fontspec会自动查找系统字体）
 % Windows系统优先使用Consolas，如果不可用则自动回退到其他支持Unicode的等宽字体
 \setmonofont{Consolas}[Scale=0.9]
 
+% 使用ctex包，并设置默认字体为FangSong
+% 通过PassOptionsToPackage在加载ctex之前禁用默认字体设置，避免"Redefining CJKfamily"警告
+\PassOptionsToPackage{fontset=none}{ctex}
+\usepackage{ctex}
+
 % 设置CJK字体（在ctex加载后统一设置）
 % 修复xeCJK的verbatim字体缩放警告和FangSong字体斜体形状未定义的警告
 % 设置CJK等宽字体的缩放比例，解决xeCJKVerbAddon警告
 % 根据警告信息，设置Scale=0.9896到CJKfamily \CJKttdefault
 % 同时设置斜体形状为正常形状，避免"Font shape `TU/FangSong(0)/m/it' undefined"和"Font shape `TU/FangSong(1)/m/it' undefined"警告
-% 注意：这些设置会覆盖ctex的默认字体（SimSun），可能会产生"Redefining CJKfamily"警告，这是正常的，不影响编译
 \setCJKmainfont{FangSong}[ItalicFont=FangSong]
 \setCJKsansfont{FangSong}[ItalicFont=FangSong]
 \setCJKmonofont{FangSong}[Scale=0.9896, ItalicFont=FangSong]
+
+% 抑制xeCJK的"Redefining CJKfamily"警告（这些警告是信息性的，不影响编译）
+% 如果仍然看到警告，可以取消下面的注释来完全抑制
+% \makeatletter
+% \def\@xeCJK@warning#1{}
+% \makeatother
 
 % 如果Consolas不可用，可以尝试以下字体之一（取消注释）：
 % \setmonofont{Courier New}[Scale=0.9]
@@ -180,13 +187,9 @@
 
 % 目录标题区域
 \begin{center}
-    \vspace*{2cm}
+    \vspace*{1cm}
     {\Huge \textbf{目 录}}
     \vspace{0.8cm}
-
-    % 添加一条分隔线
-    \rule{0.8\textwidth}{0.4pt}
-    \vspace{1cm}
 \end{center}
 
 % 生成目录（自动生成所有章节）
@@ -194,9 +197,9 @@
 \tableofcontents
 
 \clearpage
+
 \setcounter{page}{1}  % 从正文开始重新计数页码
 \pagestyle{plain}     % 设置正文页码样式
-
 
 
 % --- 编译器源码结构和功能详细说明 ---
@@ -205,59 +208,7 @@
 
 \subsection{算法描述}
 
-本项目实现了两种词法分析器：
-
-\subsubsection{方法一：基于DFA状态机的词法分析器 (\texttt{Lexer})}
-
-\paragraph{算法流程：}
-\begin{enumerate}
-    \item \textbf{初始化阶段}：
-    \begin{itemize}
-        \item 初始化关键字表（int, void, return, const, float, if, else）
-        \item 设置当前位置指针 \texttt{pos = 0}，行号 \texttt{line = 1}，列号 \texttt{column = 1}
-    \end{itemize}
-
-    \item \textbf{主分析循环} (\texttt{tokenize()} 函数)：
-    \begin{pseudocode}
-WHILE pos < source.length():
-    跳过空白字符 (空格、制表符、换行符)
-    跳过注释 (// 行注释 或 /* */ 块注释)
-
-    IF 当前位置字符是字母或下划线:
-        调用 scanIdentifier() 扫描标识符或关键字
-    ELSE IF 当前位置字符是数字:
-        调用 scanNumber() 扫描整数或浮点数
-    ELSE IF 当前位置字符是界符 ( ( ) { } ; , ):
-        调用 scanSeparator() 扫描界符
-    ELSE IF 当前位置字符是运算符 ( + - * / % = < > ! & | ):
-        调用 scanOperator() 扫描运算符
-    ELSE:
-        创建ERROR token
-
-    将扫描到的token添加到tokens列表
-END WHILE
-
-添加EOF token
-    \end{pseudocode}
-
-    \item \textbf{DFA状态转换}：
-    \begin{itemize}
-        \item \texttt{START}: 初始状态
-        \item \texttt{IN\_ID}: 标识符状态（字母/下划线开头，后跟字母/数字/下划线）
-        \item \texttt{IN\_NUM}: 整数状态（数字序列）
-        \item \texttt{IN\_FLOAT}: 浮点数状态（数字.数字）
-        \item \texttt{IN\_ASSIGN}: =状态（可能是=或==）
-        \item \texttt{IN\_LT}: <状态（可能是<或<=）
-        \item \texttt{IN\_GT}: >状态（可能是>或>=）
-        \item \texttt{IN\_NOT}: !状态（需要!=）
-        \item \texttt{IN\_AND}: \&状态（需要\&\&）
-        \item \texttt{IN\_OR}: |状态（需要||）
-        \item \texttt{IN\_COMMENT\_LINE}: 行注释状态
-        \item \texttt{IN\_COMMENT\_BLOCK}: 块注释状态
-    \end{itemize}
-\end{enumerate}
-
-\subsubsection{方法二：基于NFA→DFA转换的词法分析器 (\texttt{SLRLexer})}
+\subsubsection{基于NFA→DFA转换的词法分析器 (\texttt{SLRLexer})}
 
 \paragraph{算法流程：}
 \begin{enumerate}
@@ -431,8 +382,8 @@ std::string tokenStr = lexer.getTokensString();  // 获取字符串
 \begin{verbatim}
 ./compiler -l source.sy    # 仅词法分析
 \end{verbatim}
-\hrule
 
+\clearpage
 \section{语法分析器}
 
 \subsection{算法描述}
@@ -717,9 +668,9 @@ auto ast = parser.getAST();
 \begin{verbatim}
 ./compiler -p source.sy    # 词法+语法分析
 \end{verbatim}
-\hrule
 
-\section{语法树存储与遍历及IR生成} % 新增章节，对应源码文档 Section 3
+\clearpage
+\section{语法树（AST）}
 
 \subsection{语法树存储结构} % 对应源码文档 3.1
 
@@ -949,12 +900,29 @@ public:
     std::shared_ptr<StmtNode> elseStmt;  // 可选
 
     // RETURN类型 - 使用exp字段
-
     StmtNode() : ASTNode("Stmt"), stmtType(StmtType::EXP) {}
 };
 \end{lstlisting}
 
-\subsection{语法树遍历算法伪代码} % 对应源码文档 3.2
+\clearpage
+\section{中间代码生成（LLVM IR）}
+
+\subsection{IR生成器整体架构} % 对应源码文档 3.3.1
+
+\paragraph{设计模式：访问者模式（Visitor Pattern）}
+IR生成器采用访问者模式遍历AST并生成LLVM IR：
+\begin{itemize}
+    \item 为每种AST节点类型定义专门的访问函数（如\texttt{visitCompUnit}、\texttt{visitFuncDef}等）
+    \item 通过动态分发（\texttt{dynamic\_cast}）识别节点类型并调用相应的访问函数
+    \item 递归遍历AST树，自顶向下生成IR
+\end{itemize}
+
+\paragraph{核心组件：}
+\begin{itemize}
+    \item \texttt{IRGenerator}: IR生成器主类
+    \item \texttt{IRBuilder}: IR指令构建器，负责创建各种IR指令
+    \item \texttt{SymbolTable}: 符号表，管理作用域和变量映射
+\end{itemize}
 
 \paragraph{访问者模式遍历AST：}
 \begin{pseudocode}
@@ -1188,25 +1156,7 @@ BEGIN
 END
 \end{pseudocode}
 
-\subsection{中间代码生成详细说明} % 对应源码文档 3.3
-
-\subsubsection{IR生成器整体架构} % 对应源码文档 3.3.1
-\paragraph{设计模式：访问者模式（Visitor Pattern）}
-IR生成器采用访问者模式遍历AST并生成LLVM IR：
-\begin{itemize}
-    \item 为每种AST节点类型定义专门的访问函数（如\texttt{visitCompUnit}、\texttt{visitFuncDef}等）
-    \item 通过动态分发（\texttt{dynamic\_cast}）识别节点类型并调用相应的访问函数
-    \item 递归遍历AST树，自顶向下生成IR
-\end{itemize}
-
-\paragraph{核心组件：}
-\begin{itemize}
-    \item \texttt{IRGenerator}: IR生成器主类
-    \item \texttt{IRBuilder}: IR指令构建器，负责创建各种IR指令
-    \item \texttt{SymbolTable}: 符号表，管理作用域和变量映射
-\end{itemize}
-
-\subsubsection{LLVM IR指令类型} % 对应源码文档 3.3.2
+\subsection{LLVM IR指令类型} % 对应源码文档 3.3.2
 
 本编译器生成的IR指令类型包括：
 
@@ -1289,7 +1239,7 @@ IR生成器采用访问者模式遍历AST并生成LLVM IR：
     \item \texttt{phi}: SSA形式的Phi节点 (\texttt{\%val = phi i32 [\%a, \%bb1], [\%b, \%bb2]})
 \end{itemize}
 
-\subsubsection{基本块和控制流图（CFG）} % 对应源码文档 3.3.3
+\subsection{基本块和控制流图（CFG）} % 对应源码文档 3.3.3
 
 \paragraph{基本块（Basic Block）概念：}
 \begin{itemize}
@@ -1338,7 +1288,7 @@ thenBB          elseBB (可选)
         mergeBB (合并基本块)
 \end{verbatim}
 
-\subsubsection{符号表和作用域管理} % 对应源码文档 3.3.4
+\subsection{符号表和作用域管理} % 对应源码文档 3.3.4
 
 \paragraph{符号表结构：}
 \begin{verbatim}
@@ -1400,7 +1350,7 @@ BEGIN
 END
 \end{pseudocode}
 
-\subsubsection{全局变量和局部变量处理} % 对应源码文档 3.3.5
+\subsection{全局变量和局部变量处理} % 对应源码文档 3.3.5
 
 \paragraph{全局变量生成：}
 \begin{pseudocode}
@@ -1483,7 +1433,7 @@ BEGIN
 END
 \end{pseudocode}
 
-\subsubsection{函数定义和调用} % 对应源码文档 3.3.6
+\subsection{函数定义和调用} % 对应源码文档 3.3.6
 
 \paragraph{函数定义生成：}
 \begin{pseudocode}
@@ -1568,7 +1518,7 @@ BEGIN
 END
 \end{pseudocode}
 
-\subsubsection{类型系统和类型提升} % 对应源码文档 3.3.7
+\subsection{类型系统和类型提升} % 对应源码文档 3.3.7
 
 \paragraph{类型映射：}
 \begin{verbatim}
@@ -1608,7 +1558,7 @@ END
     \item \texttt{zext}: 零扩展（i1转i32，用于条件判断）
 \end{itemize}
 
-\subsubsection{常量折叠优化} % 对应源码文档 3.3.8
+\subsection{常量折叠优化} % 对应源码文档 3.3.8
 
 \paragraph{常量求值算法：}
 \begin{pseudocode}
@@ -1679,7 +1629,7 @@ END
     \item 避免生成不必要的运行时计算指令
 \end{itemize}
 
-\subsubsection{短路求值实现} % 对应源码文档 3.3.9
+\subsection{短路求值实现} % 对应源码文档 3.3.9
 
 \paragraph{逻辑与（\&\&）短路求值：}
 \begin{pseudocode}
@@ -1689,7 +1639,7 @@ END
 
 BEGIN
     IF node->left == nullptr:
-        // 只有右操作数
+        // 只有右操作数（递归终止条件）
         RETURN visitEqExp(node->right)
     END IF
 
@@ -1697,7 +1647,7 @@ BEGIN
     rhsBB = BasicBlock::create(module, "", currentFunction)
     mergeBB = BasicBlock::create(module, "", currentFunction)
 
-    // 计算左操作数
+    // 递归计算左操作数（左操作数也是LAndExp类型）
     leftVal = visitLAndExp(node->left)
     leftVal = ensureInt1(leftVal)  // 转换为i1类型
     leftBB = currentBB
@@ -1705,7 +1655,7 @@ BEGIN
     // 短路：左边为真则计算右边，否则跳到merge（整体为假）
     builder->create_cond_br(leftVal, rhsBB, mergeBB)
 
-    // 计算右操作数
+    // 计算右操作数（右操作数是EqExp类型）
     currentBB = rhsBB
     builder->set_insert_point(rhsBB)
     rightVal = visitEqExp(node->right)
@@ -1734,6 +1684,7 @@ END
 
 BEGIN
     IF node->left == nullptr:
+        // 只有右操作数（递归终止条件）
         RETURN visitLAndExp(node->right)
     END IF
 
@@ -1741,7 +1692,7 @@ BEGIN
     rhsBB = BasicBlock::create(module, "", currentFunction)
     mergeBB = BasicBlock::create(module, "", currentFunction)
 
-    // 计算左操作数
+    // 递归计算左操作数（左操作数也是LOrExp类型）
     leftVal = visitLOrExp(node->left)
     leftVal = ensureInt1(leftVal)
     leftBB = currentBB
@@ -1749,7 +1700,7 @@ BEGIN
     // 短路：左边为真则跳到merge（整体为真），否则计算右边
     builder->create_cond_br(leftVal, mergeBB, rhsBB)
 
-    // 计算右操作数
+    // 计算右操作数（右操作数是LAndExp类型）
     currentBB = rhsBB
     builder->set_insert_point(rhsBB)
     rightVal = visitLAndExp(node->right)
@@ -1770,7 +1721,7 @@ BEGIN
 END
 \end{pseudocode}
 
-\subsubsection{Phi节点和SSA形式} % 对应源码文档 3.3.10
+\subsection{Phi节点和SSA形式} % 对应源码文档 3.3.10
 
 \paragraph{Phi节点的作用：}
 \begin{itemize}
@@ -1800,7 +1751,7 @@ merge:
     ; 如果从rhs到达（left为true），result为right的值
 \end{verbatim}
 
-\subsubsection{IR生成完整流程} % 对应源码文档 3.3.11
+\subsection{IR生成完整流程} % 对应源码文档 3.3.11
 
 \paragraph{主生成流程：}
 \begin{pseudocode}
@@ -1901,7 +1852,7 @@ void IRGenerator::declareRuntimeFunctions() {
     \item \texttt{stoptime()}: 停止计时
 \end{itemize}
 
-\subsubsection{IR生成示例} % 对应源码文档 3.3.12
+\subsection{IR生成示例} % 对应源码文档 3.3.12
 
 \paragraph{输入源代码：}
 \begin{lstlisting}[language=C]
@@ -1954,7 +1905,7 @@ merge:
     \item \texttt{merge}基本块：加载\texttt{b}并返回
 \end{enumerate}
 
-\subsubsection{代码实现细节} % 对应源码文档 3.3.13
+\subsection{代码实现细节} % 对应源码文档 3.3.13
 
 \paragraph{IRGenerator类核心成员：}
 \begin{lstlisting}[language=C++]
@@ -2025,7 +1976,7 @@ void IRGenerator::visitIfStmt(std::shared_ptr<StmtNode> node);
 
 \textbf{功能说明：}生成if语句的IR。创建thenBB、elseBB（如果存在）和mergeBB基本块，计算条件值并生成条件跳转，分别生成then和else分支的IR，最后设置当前基本块为mergeBB。
 
-\subsubsection{设计思想总结} % 对应源码文档 3.3.14
+\subsection{设计思想总结} % 对应源码文档 3.3.14
 
 \paragraph{核心设计原则：}
 \begin{enumerate}
@@ -2224,6 +2175,7 @@ std::string ir = generator.print();
 ./compiler -i source.sy    # 完整编译（生成LLVM IR）
 \end{verbatim}
 
+\clearpage
 \section{总结}
 
 本编译器实现了完整的编译流程：
@@ -2245,6 +2197,7 @@ std::string ir = generator.print();
     \item 控制流图生成
 \end{itemize}
 
+\clearpage
 \section{小组成员分工与心得体会}
 
 \subsection{成员一：\NameA\ （学号：\IdA）}
