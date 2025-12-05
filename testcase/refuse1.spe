@@ -1,4 +1,0 @@
-1	void#void	move
-2	funcType#Ident	reduction
-3	Ident#main	move
-4	error: unexpected '{' at state 19
