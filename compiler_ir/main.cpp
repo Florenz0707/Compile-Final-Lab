@@ -124,7 +124,7 @@ void runAllTestcases(const std::string& testDir) {
         // 2. 词法分析 & 输出到 .tok 文件
         SLRLexer lexer;
         auto tokens = lexer.analyze(sourceCode);
-        
+
         {
             std::ofstream tokFile(stem + ".tok");
             tokFile << "File: " << testCase << std::endl;
@@ -146,11 +146,11 @@ void runAllTestcases(const std::string& testDir) {
         std::string caseName = testCase;
         size_t dotPos = caseName.find_last_of('.');
         if (dotPos != std::string::npos) caseName = caseName.substr(0, dotPos);
-        std::string spePath = testDir + "/test" + caseName + ".spe";
+        std::string relPath = stem + ".spe";
         try {
-            parser.saveParseLog(spePath);
+            parser.saveParseLog(relPath);
         } catch (const std::exception& e) {
-            std::cerr << "无法写入语法输出文件 " << spePath << ": " << e.what() << std::endl;
+            std::cerr << "无法写入语法输出文件 " << relPath << ": " << e.what() << std::endl;
         }
 
         // 3. 中间代码生成 & 输出到 .ll 文件 (仅当语法正确时)
