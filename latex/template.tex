@@ -8,6 +8,8 @@
 
 % --- 字体与语言设置 (核心) ---
 \usepackage{fontspec} % 允许使用系统字体
+% 使用ctex包，并设置默认字体为FangSong以避免重复定义警告
+% 注意：如果不想看到警告，可以保持默认的SimSun，但需要确保FangSong的斜体形状已定义
 \usepackage{ctex}
 
 % 配置verbatim环境使用支持Unicode的等宽字体
@@ -15,16 +17,15 @@
 % Windows系统优先使用Consolas，如果不可用则自动回退到其他支持Unicode的等宽字体
 \setmonofont{Consolas}[Scale=0.9]
 
-% 修复xeCJK的verbatim字体缩放警告
+% 设置CJK字体（在ctex加载后统一设置）
+% 修复xeCJK的verbatim字体缩放警告和FangSong字体斜体形状未定义的警告
 % 设置CJK等宽字体的缩放比例，解决xeCJKVerbAddon警告
 % 根据警告信息，设置Scale=0.9896到CJKfamily \CJKttdefault
-\setCJKmonofont{FangSong}[Scale=0.9896]
-
-% 修复FangSong字体斜体形状未定义的警告
-% 使用xeCJK包提供的字体设置，将斜体形状映射到正常形状
-% 这样可以避免"Font shape `TU/FangSong(0)/m/it' undefined"警告
-% 设置FangSong字体的斜体形状为正常形状（因为FangSong没有真正的斜体）
+% 同时设置斜体形状为正常形状，避免"Font shape `TU/FangSong(0)/m/it' undefined"和"Font shape `TU/FangSong(1)/m/it' undefined"警告
+% 注意：这些设置会覆盖ctex的默认字体（SimSun），可能会产生"Redefining CJKfamily"警告，这是正常的，不影响编译
 \setCJKmainfont{FangSong}[ItalicFont=FangSong]
+\setCJKsansfont{FangSong}[ItalicFont=FangSong]
+\setCJKmonofont{FangSong}[Scale=0.9896, ItalicFont=FangSong]
 
 % 如果Consolas不可用，可以尝试以下字体之一（取消注释）：
 % \setmonofont{Courier New}[Scale=0.9]
@@ -120,7 +121,8 @@
   {\titlerule*[0.8em]{.}\contentspage}  % 点线和页码
   [\vspace{0.1em}]            % 之后的间距
 
-
+% 包含个人信息定义（必须在\begin{document}之前）
+\input{personal_info}
 
 % ======================================================================
 % 文档区 (Document)
@@ -131,8 +133,6 @@
 % 封面页 (Title Page)
 % ----------------------------------------------------------------------
 \begin{titlepage}
-
-    \input{personal_info}
     \centering % 整体居中
 
     % 1. 校徽
@@ -2244,5 +2244,39 @@ std::string ir = generator.print();
     \item 短路求值
     \item 控制流图生成
 \end{itemize}
+
+\section{小组成员分工与心得体会}
+
+\subsection{成员一：\NameA\ （学号：\IdA）}
+
+\paragraph{主要分工：}
+\WorkA
+
+\paragraph{心得体会：}
+\ReflectionA
+
+\subsection{成员二：\NameB\ （学号：\IdB）}
+
+\paragraph{主要分工：}
+\WorkB
+
+\paragraph{心得体会：}
+\ReflectionB
+
+\subsection{成员三：\NameC\ （学号：\IdC）}
+
+\paragraph{主要分工：}
+\WorkC
+
+\paragraph{心得体会：}
+\ReflectionC
+
+\subsection{成员四：\NameD\ （学号：\IdD）}
+
+\paragraph{主要分工：}
+\WorkD
+
+\paragraph{心得体会：}
+\ReflectionD
 
 \end{document}

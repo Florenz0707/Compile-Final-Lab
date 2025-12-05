@@ -34,5 +34,5 @@ fi
 # 告知运行成功，并提示用户使用方法，./project1 为运行主程序，./runUnitsTest 为运行单元
 # 测试程序，输出内容为绿色
 echo -e "\e[1;32mRun successfully!\e[0m"
-echo -e "\e[1;32mUsage: ./project1 is run main program\e[0m"
+echo -e "\e[1;32mUsage: ./compiler is run main program\e[0m"
 echo -e "\e[1;32mUsage: ./runUnitTests is run unit test\e[0m"
