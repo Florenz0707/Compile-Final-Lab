@@ -48,4 +48,4 @@ testcase/*.ll
 testcase/*.tok
 testcase/*.spe
 
-latex/*.pdf
+report/*.pdf
