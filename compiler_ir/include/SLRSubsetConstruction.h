@@ -2,7 +2,7 @@
  * @file SLRSubsetConstruction.h
  * @brief Subset Construction algorithm for NFA to DFA conversion (adapted for compiler_ir)
  * @version 1.0.0
- * @date 2024
+ * @date 2025
  */
 
 #ifndef SYSYC_SLRSUBSETCONSTRUCTION_H

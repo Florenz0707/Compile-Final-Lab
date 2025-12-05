@@ -2,7 +2,7 @@
  * @file SLRNFA.h
  * @brief NFA implementation for SLR lexer (adapted for compiler_ir)
  * @version 1.0.0
- * @date 2024
+ * @date 2025
  */
 
 #ifndef SYSYC_SLRNFA_H
