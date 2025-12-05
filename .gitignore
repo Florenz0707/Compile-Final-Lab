@@ -44,8 +44,8 @@
 .vscode/
 .DS_Store
 
-testcase/*.ll
-testcase/*.tok
-testcase/*.spe
+# testcase/*.ll
+# testcase/*.tok
+# testcase/*.spe
 
 latex/*.pdf
