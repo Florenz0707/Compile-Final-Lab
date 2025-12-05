@@ -16,6 +16,8 @@
 #include <stack>
 #include <algorithm>
 #include <iostream>
+#include <sstream>
+#include <unordered_set>
 #include "Lexer.h"
 #include "AST.h"
 
@@ -105,9 +107,11 @@ private:
     
     std::shared_ptr<CompUnitNode> astRoot;
     bool hasError;
+    std::stringstream parseLog;
+    int logStep;
 
 public:
-    SLRParser() : hasError(false) {
+    SLRParser() : hasError(false), logStep(1) {
         initGrammar();
         computeFirst();
         computeFollow();
@@ -117,6 +121,8 @@ public:
     
     bool parse(const std::vector<Token>& tokens);
     std::shared_ptr<CompUnitNode> getAST() const { return astRoot; }
+    std::string getParseLog() const { return parseLog.str(); }
+    void saveParseLog(const std::string& filepath) const;
     
 private:
     void initGrammar();
@@ -131,6 +137,7 @@ private:
     
     // Semantic actions for AST construction
     SemanticValue reduce(int prodId, std::vector<SemanticValue>& values);
+    bool shouldLogSymbol(const std::string& symbol) const;
 };
 
 #endif // SYSYC_SLRPARSER_H

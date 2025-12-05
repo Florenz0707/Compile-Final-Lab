@@ -10,6 +10,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <exception>
 #include <dirent.h>
 #include "SLRLexer.h"
 #include "SLRParser.h"
@@ -142,6 +143,15 @@ void runAllTestcases(const std::string& testDir) {
         // 3. 语法分析
         SLRParser parser;
         bool parseSuccess = parser.parse(tokens);
+        std::string caseName = testCase;
+        size_t dotPos = caseName.find_last_of('.');
+        if (dotPos != std::string::npos) caseName = caseName.substr(0, dotPos);
+        std::string spePath = testDir + "/test" + caseName + ".spe";
+        try {
+            parser.saveParseLog(spePath);
+        } catch (const std::exception& e) {
+            std::cerr << "无法写入语法输出文件 " << spePath << ": " << e.what() << std::endl;
+        }
 
         // 3. 中间代码生成 & 输出到 .ll 文件 (仅当语法正确时)
         bool irGenerated = false;

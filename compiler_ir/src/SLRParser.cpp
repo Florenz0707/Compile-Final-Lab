@@ -7,6 +7,8 @@
 
 #include "SLRParser.h"
 #include <cctype>
+#include <fstream>
+#include <stdexcept>
 
 // Helper function to convert token to grammar symbol
 std::string SLRParser::getTokenSymbol(const Token& t) {
@@ -317,6 +319,9 @@ bool SLRParser::parse(const std::vector<Token>& tokens) {
     
     size_t ip = 0;
     hasError = false;
+    parseLog.str("");
+    parseLog.clear();
+    logStep = 1;
     
     while (true) {
         int s = stateStack.back();
@@ -329,6 +334,9 @@ bool SLRParser::parse(const std::vector<Token>& tokens) {
         
         if (actionTable.find({s, a}) == actionTable.end()) {
             std::cerr << "Parse error at token: " << (ip < tokens.size() ? tokens[ip].value : "$") << std::endl;
+            parseLog << logStep++ << "\terror: unexpected '" 
+                     << (ip < tokens.size() ? tokens[ip].value : "$")
+                     << "' at state " << s << std::endl;
             hasError = true;
             return false;
         }
@@ -342,6 +350,8 @@ bool SLRParser::parse(const std::vector<Token>& tokens) {
                 val.terminal = tokens[ip].value;
             }
             valueStack.push_back(val);
+            std::string tokenVal = (ip < tokens.size()) ? tokens[ip].value : "$";
+            parseLog << logStep++ << "\t" << a << "#" << tokenVal << "\tmove" << std::endl;
             ip++;
         } else if (act.type == REDUCE) {
             Production p = grammar[act.target - 1];
@@ -359,10 +369,14 @@ bool SLRParser::parse(const std::vector<Token>& tokens) {
             }
             
             SemanticValue result = reduce(act.target, rhsValues);
+            if (shouldLogSymbol(p.lhs)) {
+                parseLog << logStep++ << "\t" << p.lhs << "#" << a << "\treduction" << std::endl;
+            }
             
             int t = stateStack.back();
             if (gotoTable.find({t, p.lhs}) == gotoTable.end()) {
                 std::cerr << "Goto error" << std::endl;
+                parseLog << logStep++ << "\terror: goto failure on " << p.lhs << std::endl;
                 hasError = true;
                 return false;
             }
@@ -372,9 +386,30 @@ bool SLRParser::parse(const std::vector<Token>& tokens) {
             if (!valueStack.empty()) {
                 astRoot = valueStack.back().compUnit;
             }
+            parseLog << logStep++ << "\tProgram#" << a << "\taccept" << std::endl;
             return true;
         }
     }
+}
+
+void SLRParser::saveParseLog(const std::string& filepath) const {
+    std::ofstream out(filepath);
+    if (!out.is_open()) {
+        throw std::runtime_error("failed to open parse log file: " + filepath);
+    }
+    out << parseLog.str();
+}
+
+bool SLRParser::shouldLogSymbol(const std::string& symbol) const {
+    static const std::unordered_set<std::string> allowed = {
+        "Program", "compUnit", "decl", "constDecl", "bType", "constDef",
+        "constInitVal", "varDecl", "varDef", "initVal", "funcDef", "funcType",
+        "funcFParams", "funcFParam", "block", "blockItem", "stmt", "exp",
+        "cond", "lVal", "primaryExp", "number", "unaryExp", "unaryOp",
+        "funcRParams", "funcRParam", "mulExp", "addExp", "relExp", "eqExp",
+        "lAndExp", "lOrExp", "constExp"
+    };
+    return allowed.find(symbol) != allowed.end();
 }
 
 // Semantic actions - this is where AST is constructed
